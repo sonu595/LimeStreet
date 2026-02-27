@@ -1,14 +1,15 @@
 package com.Clothing.Startup.Controller;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
 import com.Clothing.Startup.Model.Cart;
 import com.Clothing.Startup.Model.Product;
 import com.Clothing.Startup.Repository.CartRepository;
 import com.Clothing.Startup.Repository.ProductRepository;
 import com.Clothing.Startup.Util.JwtUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/cart")
@@ -63,6 +64,7 @@ public class CartController {
             if (product != null) {
                 item.setProductName(product.getName());
                 item.setProductImage(product.getImageUrl());
+                item.setPrice(product.getPrice());
             }
         }
         
