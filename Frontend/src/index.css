@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* .input {
+  @apply border border-gray-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent;
+} */

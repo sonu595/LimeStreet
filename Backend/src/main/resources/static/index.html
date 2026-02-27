@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OTP Registration & Login</title>
+    <style>
+        body { font-family: Arial; max-width: 400px; margin: 50px auto; }
+        .container { padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
+        input, button { width: 100%; padding: 10px; margin: 5px 0; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .step { display: none; }
+        .step.active { display: block; }
+        .message { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #e7f3ff; color: #004085; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🔐 LimeStreet - OTP Registration</h2>
+        
+        <!-- STEP 1: Email Input -->
+        <div id="step1" class="step active">
+            <h3>Step 1: Enter Email</h3>
+            <input type="email" id="email" placeholder="Enter your email" required>
+            <button onclick="sendOtp()">Send OTP</button>
+        </div>
+        
+        <!-- STEP 2: OTP + Name (if new user) -->
+        <div id="step2" class="step">
+            <h3>Step 2: Verify OTP</h3>
+            <p>Email: <span id="displayEmail"></span></p>
+            
+            <div id="nameField" style="display: none;">
+                <label>Your Name (New User):</label>
+                <input type="text" id="name" placeholder="Enter your name">
+            </div>
+            
+            <label>Enter OTP:</label>
+            <input type="text" id="otp" placeholder="6-digit OTP" maxlength="6">
+            
+            <button onclick="verifyOtp()">Verify & Continue</button>
+            <button onclick="resendOtp()" style="background: #6c757d;">Resend OTP</button>
+        </div>
+        
+        <!-- STEP 3: Success -->
+        <div id="step3" class="step">
+            <h3>✅ Success!</h3>
+            <div id="result" class="message success"></div>
+            <pre id="tokenDisplay" style="background: #f4f4f4; padding: 10px; overflow-x: auto;"></pre>
+            <button onclick="resetForm()">Logout & Try Again</button>
+        </div>
+        
+        <!-- Message Display -->
+        <div id="message" class="message" style="display: none;"></div>
+    </div>
+
+    <script>
+        let userEmail = '';
+        let isExistingUser = false;
+        
+        // Show message function
+        function showMessage(text, type) {
+            const msgDiv = document.getElementById('message');
+            msgDiv.style.display = 'block';
+            msgDiv.className = 'message ' + type;
+            msgDiv.innerText = text;
+            setTimeout(() => {
+                msgDiv.style.display = 'none';
+            }, 5000);
+        }
+        
+        // STEP 1: Send OTP
+        function sendOtp() {
+            const email = document.getElementById('email').value;
+            
+            if (!email || !email.includes('@')) {
+                showMessage('Valid email daalo!', 'error');
+                return;
+            }
+            
+            userEmail = email;
+            
+            fetch('http://localhost:8080/api/auth/send-otp', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email: email})
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log('OTP Response:', data);
+                showMessage('OTP sent to ' + email + ' (Check console)', 'success');
+                
+                // Check if user exists
+                isExistingUser = data.isExistingUser === 'true';
+                
+                // Move to step 2
+                document.getElementById('step1').classList.remove('active');
+                document.getElementById('step2').classList.add('active');
+                document.getElementById('displayEmail').innerText = email;
+                
+                // Show/hide name field based on user type
+                if (isExistingUser) {
+                    document.getElementById('nameField').style.display = 'none';
+                    showMessage('Existing user - Sirf OTP daalo', 'info');
+                } else {
+                    document.getElementById('nameField').style.display = 'block';
+                    showMessage('New user - Apna name bhi daalo', 'info');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showMessage('OTP send nahi hua!', 'error');
+            });
+        }
+        
+        // STEP 2: Verify OTP
+        function verifyOtp() {
+            const otp = document.getElementById('otp').value;
+            const name = document.getElementById('name').value;
+            
+            if (!otp || otp.length !== 6) {
+                showMessage('6-digit OTP daalo!', 'error');
+                return;
+            }
+            
+            // New user ke liye name required
+            if (!isExistingUser && !name) {
+                showMessage('Apna name daalo!', 'error');
+                return;
+            }
+            
+            const requestBody = {
+                email: userEmail,
+                otp: otp
+            };
+            
+            // New user ho to name bhi bhejo
+            if (!isExistingUser) {
+                requestBody.name = name;
+            }
+            
+            fetch('http://localhost:8080/api/auth/verify-register', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(requestBody)
+            })
+            .then(res => {
+                if (!res.ok) {
+                    return res.text().then(text => { throw new Error(text); });
+                }
+                return res.json();
+            })
+            .then(data => {
+                console.log('Login Success:', data);
+                
+                // Move to step 3
+                document.getElementById('step2').classList.remove('active');
+                document.getElementById('step3').classList.add('active');
+                
+                // Show result
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = `
+                    <strong>✅ ${data.message}</strong><br>
+                    Email: ${data.email}<br>
+                    Name: ${data.name}<br>
+                    User ID: ${data.userId}
+                `;
+                
+                document.getElementById('tokenDisplay').innerText = 
+                    'JWT Token:\n' + data.token;
+                
+                // Save token
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify({
+                    email: data.email,
+                    name: data.name,
+                    userId: data.userId
+                }));
+                
+                showMessage('Login successful! Token save ho gaya', 'success');
+            })
+            .catch(err => {
+                console.error(err);
+                showMessage('Error: ' + err.message, 'error');
+            });
+        }
+        
+        // Resend OTP
+        function resendOtp() {
+            fetch('http://localhost:8080/api/auth/send-otp', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email: userEmail})
+            })
+            .then(res => res.json())
+            .then(data => {
+                showMessage('Naya OTP bhej diya! Console check karo', 'success');
+            })
+            .catch(err => {
+                showMessage('Error sending OTP', 'error');
+            });
+        }
+        
+        // Reset form
+        function resetForm() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            
+            document.getElementById('step3').classList.remove('active');
+            document.getElementById('step1').classList.add('active');
+            document.getElementById('email').value = '';
+            document.getElementById('otp').value = '';
+            document.getElementById('name').value = '';
+        }
+        
+        // Check OTP status
+        function checkOtpStatus() {
+            if (!userEmail) return;
+            
+            fetch(`http://localhost:8080/api/auth/otp-status/${userEmail}`)
+            .then(res => res.json())
+            .then(data => {
+                console.log('OTP Status:', data);
+            });
+        }
+        
+        // Auto check status every 30 seconds
+        setInterval(checkOtpStatus, 30000);
+    </script>
+</body>
+</html>
