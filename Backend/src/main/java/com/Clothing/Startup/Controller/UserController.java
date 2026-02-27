@@ -30,6 +30,11 @@ public class UserController {
         User dbUser = repo.findByEmail(user.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // OTP verify
+        if ("OTP".equals(dbUser.getProvider())) {
+            throw new RuntimeException("Please login with OTP");
+        }
+
         if (user.getPassword().equals(dbUser.getPassword())) {
             return "Login successful";
         } else {

@@ -1,15 +1,14 @@
 // App.jsx
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
-import Nav from './Component/Nav/Nav';
+import Nav from './Component/Navbar/Nav';
 import Home from './pages/Home/Home';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import Cart from './pages/Cart/Cart';
-import WishList from './pages/WishList/WishList';
 import ProfilePage from './pages/Profile/ProfilePage';
-import Arrivel from './pages/Arrivel/Arrivel';
+import Arrivel from './pages/New/Arrivel';
 import Sale from './pages/Sale/Sale';
 
 // Protected Route Component
@@ -69,7 +68,7 @@ function App() {
   };
 
   return (
-    <Router>
+    
       <div className="App">
         <Routes>
           {/* Public Routes - No Navbar */}
@@ -148,10 +147,7 @@ function App() {
             path="/wishlist"
             element={
               <ProtectedRoute>
-                <>
                   <Nav />
-                  <WishList />
-                </>
               </ProtectedRoute>
             }
           />
@@ -172,7 +168,6 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
-    </Router>
   );
 }
 
