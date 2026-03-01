@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Environment variables - ye line add karo agar nahi hai
+.env
+.env.local
+.env.production
+.env.development

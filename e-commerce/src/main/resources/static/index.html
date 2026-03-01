@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 450px;
+            padding: 40px;
+            position: relative;
+            min-height: 550px;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .link {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+
+        .link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .link a:hover {
+            text-decoration: underline;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .message.error {
+            background: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+            display: block;
+        }
+
+        .message.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+            display: block;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-header h2 {
+            margin-bottom: 0;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            padding: 8px 20px;
+            font-size: 14px;
+            width: auto;
+            margin: 0;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+            transform: none;
+        }
+
+        .user-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .user-info p {
+            margin: 10px 0;
+            color: #555;
+        }
+
+        .user-info strong {
+            color: #333;
+            width: 100px;
+            display: inline-block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Message Display -->
+        <div id="message" class="message"></div>
+
+        <!-- Login Page -->
+        <div id="loginPage" class="page active">
+            <h2>🔐 Login</h2>
+            <form onsubmit="event.preventDefault(); login();">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                </div>
+                <button type="submit">Login</button>
+            </form>
+            <div class="link">
+                Don't have an account? <a onclick="showPage('register')">Register</a>
+            </div>
+            <div class="link">
+                <a onclick="showPage('forgot')">Forgot Password?</a>
+            </div>
+        </div>
+
+        <!-- Register Page -->
+        <div id="registerPage" class="page">
+            <h2>📝 Register</h2>
+            <form onsubmit="event.preventDefault(); register();">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="regName" placeholder="Enter your name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="regEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" placeholder="Create password" required>
+                </div>
+                <button type="submit">Register</button>
+            </form>
+            <div class="link">
+                Already have an account? <a onclick="showPage('login')">Login</a>
+            </div>
+        </div>
+
+        <!-- OTP Verification Page -->
+        <div id="otpPage" class="page">
+            <h2>✓ Verify OTP</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 20px;">Enter the OTP sent to your email</p>
+            <form onsubmit="event.preventDefault(); verifyOtp();">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="otpEmail" readonly style="background: #f5f5f5;">
+                </div>
+                <div class="form-group">
+                    <label>OTP Code</label>
+                    <input type="text" id="otpCode" placeholder="Enter 6-digit OTP" maxlength="6" required>
+                </div>
+                <button type="submit">Verify OTP</button>
+            </form>
+            <div class="link">
+                Didn't receive OTP? <a onclick="resendOtp()">Resend</a>
+            </div>
+            <div class="link">
+                <a onclick="showPage('login')">Back to Login</a>
+            </div>
+        </div>
+
+        <!-- Forgot Password Page -->
+        <div id="forgotPage" class="page">
+            <h2>❓ Forgot Password</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 20px;">Enter your email to reset password</p>
+            <form onsubmit="event.preventDefault(); forgotPassword();">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="forgotEmail" placeholder="Enter your email" required>
+                </div>
+                <button type="submit">Send OTP</button>
+            </form>
+            <div class="link">
+                <a onclick="showPage('login')">Back to Login</a>
+            </div>
+        </div>
+
+        <!-- Reset Password Page -->
+        <div id="resetPage" class="page">
+            <h2>🔑 Reset Password</h2>
+            <form onsubmit="event.preventDefault(); resetPassword();">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="resetEmail" readonly style="background: #f5f5f5;">
+                </div>
+                <div class="form-group">
+                    <label>OTP</label>
+                    <input type="text" id="resetOtp" placeholder="Enter OTP" required>
+                </div>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" id="newPassword" placeholder="Enter new password" required>
+                </div>
+                <button type="submit">Reset Password</button>
+            </form>
+            <div class="link">
+                <a onclick="showPage('login')">Back to Login</a>
+            </div>
+        </div>
+
+        <!-- Dashboard Page -->
+        <div id="dashboardPage" class="page">
+            <div class="dashboard-header">
+                <h2>📊 Dashboard</h2>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+            
+            <div class="user-info" id="userInfo">
+                <p><strong>Name:</strong> <span id="userName">-</span></p>
+                <p><strong>Email:</strong> <span id="userEmail">-</span></p>
+                <p><strong>Status:</strong> <span id="userStatus">-</span></p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Orders</h3>
+                    <p>0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Wishlist</h3>
+                    <p>0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Cart Items</h3>
+                    <p>0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Reviews</h3>
+                    <p>0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const BASE_URL = 'http://localhost:8080';
+        let currentUser = null;
+        let tokens = {
+            access: null,
+            refresh: null
+        };
+
+        // Show message
+        function showMessage(text, type) {
+            const msgEl = document.getElementById('message');
+            msgEl.textContent = text;
+            msgEl.className = `message ${type}`;
+            setTimeout(() => {
+                msgEl.style.display = 'none';
+            }, 5000);
+        }
+
+        // Show/Hide Pages
+        function showPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(page + 'Page').classList.add('active');
+        }
+
+        // API Call
+        async function callApi(endpoint, method, body = null) {
+            const url = BASE_URL + endpoint;
+            console.log(`📡 ${method} ${endpoint}`, body);
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: body ? JSON.stringify(body) : null
+                });
+
+                const data = await response.json();
+                console.log(`📨 Response:`, data);
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Request failed');
+                }
+
+                return data;
+            } catch (error) {
+                console.error('❌ Error:', error);
+                showMessage(error.message, 'error');
+                throw error;
+            }
+        }
+
+        // ========== AUTH FUNCTIONS ==========
+
+        // Register
+        async function register() {
+            const data = {
+                name: document.getElementById('regName').value,
+                email: document.getElementById('regEmail').value,
+                password: document.getElementById('regPassword').value
+            };
+
+            try {
+                const result = await callApi('/auth/register', 'POST', data);
+                showMessage(result.message || 'Registration successful! Check email for OTP.', 'success');
+                
+                // Save email for OTP page
+                document.getElementById('otpEmail').value = data.email;
+                showPage('otp');
+            } catch (error) {
+                // Error already shown
+            }
+        }
+
+        // Verify OTP
+        async function verifyOtp() {
+            const data = {
+                email: document.getElementById('otpEmail').value,
+                otp: document.getElementById('otpCode').value
+            };
+
+            try {
+                const result = await callApi('/auth/verify-otp', 'POST', data);
+                showMessage('Email verified successfully! Please login.', 'success');
+                showPage('login');
+            } catch (error) {}
+        }
+
+        // Resend OTP
+        async function resendOtp() {
+            const email = document.getElementById('otpEmail').value;
+            try {
+                const result = await callApi(`/auth/resend-otp?email=${encodeURIComponent(email)}`, 'POST');
+                showMessage('OTP resent successfully!', 'success');
+            } catch (error) {}
+        }
+
+        // Login
+        async function login() {
+            const data = {
+                email: document.getElementById('loginEmail').value,
+                password: document.getElementById('loginPassword').value
+            };
+
+            try {
+                const result = await callApi('/auth/login', 'POST', data);
+                
+                if (result.data) {
+                    tokens.access = result.data.accessToken;
+                    tokens.refresh = result.data.refreshToken;
+                    
+                    // Save user info
+                    currentUser = {
+                        email: data.email,
+                        name: data.email.split('@')[0],
+                        status: 'ACTIVE'
+                    };
+                    
+                    // Update dashboard
+                    document.getElementById('userName').textContent = currentUser.name;
+                    document.getElementById('userEmail').textContent = currentUser.email;
+                    document.getElementById('userStatus').textContent = 'Active';
+                    
+                    showMessage('Login successful!', 'success');
+                    showPage('dashboard');
+                }
+            } catch (error) {}
+        }
+
+        // Forgot Password
+        async function forgotPassword() {
+            const email = document.getElementById('forgotEmail').value;
+            
+            try {
+                const result = await callApi(`/auth/forgot-password?email=${encodeURIComponent(email)}`, 'POST');
+                document.getElementById('resetEmail').value = email;
+                showMessage('OTP sent to your email!', 'success');
+                showPage('reset');
+            } catch (error) {}
+        }
+
+        // Reset Password
+        async function resetPassword() {
+            const data = {
+                email: document.getElementById('resetEmail').value,
+                otp: document.getElementById('resetOtp').value,
+                newPassword: document.getElementById('newPassword').value
+            };
+
+            try {
+                const result = await callApi('/auth/reset-password', 'POST', data);
+                showMessage('Password reset successful! Please login.', 'success');
+                showPage('login');
+            } catch (error) {}
+        }
+
+        // Logout
+        function logout() {
+            currentUser = null;
+            tokens.access = null;
+            tokens.refresh = null;
+            showMessage('Logged out successfully!', 'success');
+            showPage('login');
+            
+            // Clear forms
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+        }
+
+        // Check if user is logged in (on page load)
+        window.onload = function() {
+            console.log('🚀 Auth App Ready');
+            console.log('🔗 Base URL:', BASE_URL);
+            
+            // Clear all forms
+            document.getElementById('loginEmail').value = 'test@example.com';
+            document.getElementById('loginPassword').value = '123456';
+            document.getElementById('regName').value = 'Test User';
+            document.getElementById('regEmail').value = 'test@example.com';
+            document.getElementById('regPassword').value = '123456';
+        };
+    </script>
+</body>
+</html>
