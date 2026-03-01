@@ -1,0 +1,7 @@
+POST /auth/register - Register new user
+POST /auth/verify-otp - Verify email with OTP
+POST /auth/login - Login and get tokens
+POST /auth/resend-otp?email= - Resend OTP to email
+POST /auth/forgot-password?email= - Request password reset OTP
+POST /auth/reset-password - Reset password with OTP
+POST /auth/refresh-token - Get new access token using refresh token
