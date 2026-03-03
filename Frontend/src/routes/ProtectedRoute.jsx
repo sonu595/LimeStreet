@@ -25,6 +25,5 @@ export const PublicRoute = ({ children }) => {
       </div>
     );
   }
-return !isAuthenticated ? children : <Navigate to="/dashboard"/>
-
+return !isAuthenticated ? children : <Navigate to="/"/>
 };

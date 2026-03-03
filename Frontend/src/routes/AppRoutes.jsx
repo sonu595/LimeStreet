@@ -6,17 +6,19 @@ import Register from '../components/auth/Register';
 import VerifyOTP from '../components/auth/VerifyOTP';
 import ForgotPassword from '../components/auth/ForgotPassword';
 import ResetPassword from '../components/auth/ResetPassword';
-import Dashboard from '../pages/Dashboard';
+import Home from '../pages/Home';
+import Products from '../pages/Products';
+import ProductDetailPage from '../pages/ProductDetailPage';
 
 const AppRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={
-        <PublicRoute>
-          <Login />
-        </PublicRoute>
-      } />
+      {/* Public Routes - accessible to all */}
+      <Route path="/" element={<Home />} />
+      <Route path="/products" element={<Products />} />
+      <Route path="/product/:id" element={<ProductDetailPage />} />
 
+      {/* Auth Routes - redirect to dashboard if already logged in */}
       <Route path="/login" element={
         <PublicRoute>
           <Login />
@@ -45,12 +47,6 @@ const AppRoutes = () => {
         <PublicRoute>
           <ResetPassword />
         </PublicRoute>
-      } />
-
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <Dashboard />
-        </ProtectedRoute>
       } />
     </Routes>
   );
