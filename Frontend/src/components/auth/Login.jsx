@@ -70,7 +70,7 @@ const Login = () => {
           alt="Fashion Shopping"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent"></div>
+        <div className="absolute inset-0 bg-linear-to-r from-black/60 to-transparent"></div>
         <div className="absolute bottom-12 left-12 text-white">
           <h1 className="text-4xl font-bold mb-4">LimeStreet</h1>
           <p className="text-xl text-gray-200">Your premium fashion destination</p>
