@@ -1,47 +1,175 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useState, useEffect } from 'react';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   return (
-    <nav style={{
-      backgroundColor: '#000',
-      padding: '15px 40px',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center'
-    }}>
-      <Link to="/" style={{ color: 'white', textDecoration: 'none', fontSize: '24px', fontWeight: 'bold' }}>
-        LimeStreet
-      </Link>
-      
-      <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-        <Link to="/products" style={{ color: 'white', textDecoration: 'none' }}>Products</Link>
-        
-        {user ? (
-          <>
-            <Link to="/dashboard" style={{ color: 'white', textDecoration: 'none' }}>Dashboard</Link>
-            <button 
-              onClick={logout}
-              style={{
-                background: 'none',
-                border: '1px solid white',
-                color: 'white',
-                padding: '5px 15px',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
+    <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${
+      isScrolled ? 'bg-white/90 backdrop-blur-md shadow-lg' : 'bg-transparent'
+    }`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16 md:h-20">
+          {/* Logo */}
+          <Link 
+            to="/" 
+            className={`text-2xl font-light tracking-wider transition-all duration-300 hover:scale-105 ${
+              isScrolled ? 'text-gray-900' : 'text-white'
+            }`}
+          >
+            LIME STREET
+          </Link>
+
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center space-x-8">
+            <Link 
+              to="/products" 
+              className={`relative group transition-colors duration-300 ${
+                isScrolled ? 'text-gray-700 hover:text-black' : 'text-white/90 hover:text-white'
+              }`}
             >
-              Logout
-            </button>
-          </>
-        ) : (
-          <>
-            <Link to="/login" style={{ color: 'white', textDecoration: 'none' }}>Login</Link>
-            <Link to="/register" style={{ color: 'white', textDecoration: 'none' }}>Register</Link>
-          </>
-        )}
+              Products
+              <span className={`absolute -bottom-1 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full ${
+                isScrolled ? 'bg-black' : 'bg-white'
+              }`}></span>
+            </Link>
+            
+            {user ? (
+              <>
+                <span className={`text-sm ${isScrolled ? 'text-gray-600' : 'text-white/80'}`}>
+                  Hi, {user.email?.split('@')[0]}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className={`px-4 py-2 rounded-full border transition-all duration-300 hover:scale-105 ${
+                    isScrolled 
+                      ? 'border-gray-300 text-gray-700 hover:bg-black hover:text-white hover:border-black' 
+                      : 'border-white/30 text-white hover:bg-white hover:text-black'
+                  }`}
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <div className="flex items-center space-x-4">
+                <Link
+                  to="/login"
+                  className={`px-4 py-2 transition-all duration-300 hover:scale-105 ${
+                    isScrolled 
+                      ? 'text-gray-700 hover:text-black' 
+                      : 'text-white/90 hover:text-white'
+                  }`}
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className={`px-4 py-2 rounded-full border transition-all duration-300 hover:scale-105 ${
+                    isScrolled 
+                      ? 'border-gray-300 text-gray-700 hover:bg-black hover:text-white hover:border-black' 
+                      : 'border-white/30 text-white hover:bg-white hover:text-black'
+                  }`}
+                >
+                  Register
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden relative w-10 h-10 focus:outline-none"
+          >
+            <span className={`absolute block h-0.5 w-6 transform transition-all duration-300 ${
+              isScrolled ? 'bg-gray-900' : 'bg-white'
+            } ${isMobileMenuOpen ? 'rotate-45 top-5' : 'top-3'}`}></span>
+            <span className={`absolute block h-0.5 w-6 transform transition-all duration-300 ${
+              isScrolled ? 'bg-gray-900' : 'bg-white'
+            } ${isMobileMenuOpen ? 'opacity-0' : 'top-5'}`}></span>
+            <span className={`absolute block h-0.5 w-6 transform transition-all duration-300 ${
+              isScrolled ? 'bg-gray-900' : 'bg-white'
+            } ${isMobileMenuOpen ? '-rotate-45 top-5' : 'top-7'}`}></span>
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        <div className={`md:hidden overflow-hidden transition-all duration-500 ${
+          isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+        }`}>
+          <div className="py-4 space-y-4">
+            <Link
+              to="/products"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`block transition-colors duration-300 ${
+                isScrolled ? 'text-gray-700 hover:text-black' : 'text-white/90 hover:text-white'
+              }`}
+            >
+              Products
+            </Link>
+            
+            {user ? (
+              <>
+                <span className={`block text-sm ${isScrolled ? 'text-gray-600' : 'text-white/80'}`}>
+                  Hi, {user.email?.split('@')[0]}
+                </span>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`block w-full text-left px-4 py-2 rounded-full border transition-all duration-300 ${
+                    isScrolled 
+                      ? 'border-gray-300 text-gray-700 hover:bg-black hover:text-white' 
+                      : 'border-white/30 text-white hover:bg-white hover:text-black'
+                  }`}
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`block transition-colors duration-300 ${
+                    isScrolled ? 'text-gray-700 hover:text-black' : 'text-white/90 hover:text-white'
+                  }`}
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`block px-4 py-2 rounded-full border transition-all duration-300 ${
+                    isScrolled 
+                      ? 'border-gray-300 text-gray-700 hover:bg-black hover:text-white' 
+                      : 'border-white/30 text-white hover:bg-white hover:text-black'
+                  }`}
+                >
+                  Register
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </nav>
   );

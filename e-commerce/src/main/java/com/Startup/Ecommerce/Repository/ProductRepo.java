@@ -1,6 +1,7 @@
 package com.Startup.Ecommerce.Repository;
 
 import com.Startup.Ecommerce.Models.Product;
+import com.Startup.Ecommerce.Enum.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,7 +11,7 @@ import java.util.List;
 @Repository
 public interface ProductRepo extends JpaRepository<Product, Long> {
     
-    List<Product> findByCategory(String category);
+    List<Product> findByCategory(Category category);
     
     List<Product> findByBrand(String brand);
     

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import Input from '../common/Input';
 import Button from '../common/Button';
+import Navbar from '../layout/Navbar';
 
 const VerifyOTP = () => {
   const [otp, setOtp] = useState('');
@@ -26,91 +27,114 @@ const VerifyOTP = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen flex relative">
-      {/* Background Image - Mobile me dikhega */}
-      <div className="absolute inset-0 lg:hidden">
-        <img
-          src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
-          alt="Fashion Model"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-black/50"></div>
-      </div>
+  const pageVariants = {
+    initial: { opacity: 0, scale: 0.95 },
+    animate: { opacity: 1, scale: 1 },
+    exit: { opacity: 0, scale: 0.95 }
+  };
 
-      {/* Left Side Image - Desktop me dikhega */}
-      <div className="hidden lg:block lg:w-1/2 relative">
-        <img
-          src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
-          alt="Fashion Model"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent"></div>
-        <div className="absolute bottom-12 left-12 text-white">
-          <h1 className="text-4xl font-bold mb-4">Verify Your Email</h1>
-          <p className="text-xl text-gray-200">One last step to join us</p>
+  return (
+    <motion.div
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      variants={pageVariants}
+      transition={{ duration: 0.4 }}
+      className="min-h-screen flex flex-col"
+    >
+      <Navbar />
+      
+      <div className="flex-1 flex relative">
+        {/* Background Image - Mobile */}
+        <div className="absolute inset-0 lg:hidden">
+          <img
+            src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+            alt="Fashion Model"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/50"></div>
+        </div>
+
+        {/* Left Side Image - Desktop */}
+        <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
+          <motion.div
+            initial={{ scale: 1.2 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 1.5 }}
+            className="absolute inset-0"
+          >
+            <img
+              src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+              alt="Fashion Model"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-linear-to-r from-black/60 to-transparent"></div>
+          </motion.div>
+          
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="absolute bottom-12 left-12 text-white z-10"
+          >
+            <h1 className="text-5xl font-light mb-4">Verify Email</h1>
+            <p className="text-xl text-gray-200 font-light">One last step</p>
+          </motion.div>
+        </div>
+
+        {/* Right Side - Form */}
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-4 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="w-full max-w-md"
+          >
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-light text-gray-900 mb-2">Enter OTP</h2>
+              <p className="text-gray-500">Code sent to {email}</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <Input
+                label="OTP Code"
+                type="text"
+                value={otp}
+                onChange={(e) => {
+                  setOtp(e.target.value);
+                  setError('');
+                }}
+                placeholder="Enter 6-digit OTP"
+                error={error}
+                maxLength="6"
+              />
+
+              <Button type="submit" loading={loading} variant="primary">
+                Verify Email
+              </Button>
+            </form>
+
+            <div className="mt-8 text-center space-y-3">
+              <p className="text-sm text-gray-500">
+                Didn't receive code?{' '}
+                <Link
+                  to="/register"
+                  className="font-medium text-black hover:underline"
+                >
+                  Resend
+                </Link>
+              </p>
+              <Link
+                to="/login"
+                className="text-sm text-gray-500 hover:text-black transition-colors block"
+              >
+                Back to Login
+              </Link>
+            </div>
+          </motion.div>
         </div>
       </div>
-
-      {/* Right Side - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md p-6 sm:p-8 rounded-2xl shadow-2xl lg:bg-white bg-white/10 backdrop-blur-md border lg:border-gray-200 border-white/20"
-        >
-          <div className="text-center mb-6 sm:mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-2 lg:text-gray-900 text-white">
-              Verify OTP
-            </h2>
-            <p className="text-sm sm:text-base lg:text-gray-600 text-white/80">
-              Enter the 6-digit code sent to
-            </p>
-            <p className="font-semibold mt-1 text-sm sm:text-base break-all lg:text-gray-900 text-white">
-              {email}
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-            <Input
-              label="OTP Code"
-              type="text"
-              value={otp}
-              onChange={(e) => {
-                setOtp(e.target.value);
-                setError('');
-              }}
-              placeholder="Enter 6-digit OTP"
-              error={error}
-              maxLength="6"
-            />
-
-            <Button type="submit" loading={loading} variant="primary">
-              Verify Email
-            </Button>
-          </form>
-
-          <div className="mt-6 sm:mt-8 text-center space-y-3 sm:space-y-4">
-            <p className="text-xs sm:text-sm lg:text-gray-600 text-white/80">
-              Didn't receive code?{' '}
-              <Link
-                to="/register"
-                className="font-semibold hover:underline lg:text-gray-900 text-white"
-              >
-                Resend
-              </Link>
-            </p>
-            <Link
-              to="/login"
-              className="text-xs sm:text-sm transition-colors block lg:text-gray-600 lg:hover:text-gray-900 text-white/80 hover:text-white"
-            >
-              Back to Login
-            </Link>
-          </div>
-        </motion.div>
-      </div>
-    </div>
+    </motion.div>
   );
 };
 

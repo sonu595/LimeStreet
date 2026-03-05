@@ -1,6 +1,7 @@
 package com.Startup.Ecommerce.Service;
 
 import com.Startup.Ecommerce.Models.Product;
+import com.Startup.Ecommerce.Enum.Category;
 import com.Startup.Ecommerce.Repository.ProductRepo;
 import com.Startup.Ecommerce.exception.NotFoundException;
 import org.springframework.stereotype.Service;
@@ -25,7 +26,12 @@ public class ProductService {
     }
     
     public List<Product> getProductsByCategory(String category) {
-        return productRepo.findByCategory(category);
+        try {
+            Category cat = Category.valueOf(category.toUpperCase());
+            return productRepo.findByCategory(cat);
+        } catch (IllegalArgumentException e) {
+            return List.of();
+        }
     }
     
     public List<Product> getProductsByBrand(String brand) {
@@ -60,6 +66,11 @@ public class ProductService {
         product.setPrice(productDetails.getPrice());
         product.setStock(productDetails.getStock());
         product.setCategory(productDetails.getCategory());
+        product.setTshirtType(productDetails.getTshirtType());
+        product.setDesignCategory(productDetails.getDesignCategory());
+        product.setFabric(productDetails.getFabric());
+        product.setSize(productDetails.getSize());
+        product.setColor(productDetails.getColor());
         product.setBrand(productDetails.getBrand());
         product.setImageUrl(productDetails.getImageUrl());
         

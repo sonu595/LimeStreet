@@ -2,11 +2,9 @@ package com.Startup.Ecommerce.controller;
 
 import com.Startup.Ecommerce.Models.Product;
 import com.Startup.Ecommerce.Service.ProductService;
-import com.Startup.Ecommerce.dto.request.ProductRequest;
 import com.Startup.Ecommerce.dto.response.ApiResponse;
 import com.Startup.Ecommerce.dto.response.ProductResponse;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -72,47 +70,6 @@ public class ProductController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Best sellers fetched successfully", response));
     }
     
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<ProductResponse>> createProduct(@RequestBody ProductRequest request) {
-        Product product = new Product(
-            request.getName(),
-            request.getDescription(),
-            request.getPrice(),
-            request.getStock(),
-            request.getCategory(),
-            request.getBrand(),
-            request.getImageUrl()
-        );
-        
-        Product savedProduct = productService.createProduct(product);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Product created successfully", convertToResponse(savedProduct)));
-    }
-    
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<ProductResponse>> updateProduct(@PathVariable Long id, @RequestBody ProductRequest request) {
-        Product productDetails = new Product(
-            request.getName(),
-            request.getDescription(),
-            request.getPrice(),
-            request.getStock(),
-            request.getCategory(),
-            request.getBrand(),
-            request.getImageUrl()
-        );
-        
-        Product updatedProduct = productService.updateProduct(id, productDetails);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Product updated successfully", convertToResponse(updatedProduct)));
-    }
-    
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> deleteProduct(@PathVariable Long id) {
-        productService.deleteProduct(id);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Product deleted successfully", null));
-    }
-    
     private ProductResponse convertToResponse(Product product) {
         ProductResponse response = new ProductResponse();
         response.setId(product.getId());
@@ -121,6 +78,11 @@ public class ProductController {
         response.setPrice(product.getPrice());
         response.setStock(product.getStock());
         response.setCategory(product.getCategory());
+        response.setTshirtType(product.getTshirtType());
+        response.setDesignCategory(product.getDesignCategory());
+        response.setFabric(product.getFabric());
+        response.setSize(product.getSize());
+        response.setColor(product.getColor());
         response.setBrand(product.getBrand());
         response.setImageUrl(product.getImageUrl());
         response.setRating(product.getRating());

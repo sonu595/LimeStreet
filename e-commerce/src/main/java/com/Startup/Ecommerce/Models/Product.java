@@ -7,10 +7,12 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+import com.Startup.Ecommerce.Enum.Category;
+
 @Data
 @Entity
 @NoArgsConstructor
-@AllArgsConstructor 
+@AllArgsConstructor
 @Table(name = "products")
 public class Product {
     
@@ -22,7 +24,19 @@ public class Product {
     private String description;
     private Double price;
     private Integer stock;
-    private String category;
+    
+    @Enumerated(EnumType.STRING)
+    private Category category;
+    
+    @Enumerated(EnumType.STRING)
+    private Category tshirtType;
+
+    @Enumerated(EnumType.STRING)
+    private Category designCategory;
+
+    private String fabric;
+    private String size;
+    private String color;
     private String brand;
     private String imageUrl;
     private Double rating;
@@ -31,20 +45,10 @@ public class Product {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-        public Product(String name, String description, Double price, Integer stock, 
-                   String category, String brand, String imageUrl) {
-        this.name = name;
-        this.description = description;
-        this.price = price;
-        this.stock = stock;
-        this.category = category;
-        this.brand = brand;
-        this.imageUrl = imageUrl;
-        this.rating = 0.0;
-        this.reviewCount = 0;
-    }
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        if (rating == null) rating = 0.0;
+        if (reviewCount == null) reviewCount = 0;
     }
 }

@@ -1,6 +1,7 @@
 package com.Startup.Ecommerce.Enum;
 
 public enum Category {
+    // Product Categories
     MEN,
     WOMEN,
     KIDS,
@@ -12,5 +13,26 @@ public enum Category {
     SPORTS,
     FORMAL,
     CASUAL,
-    TRADITIONAL
+    TRADITIONAL,
+    
+    // T-Shirt Types
+    COTTON_TSHIRT,
+    POLO_TSHIRT,
+    OVERSIZED_TSHIRT,
+    V_NECK_TSHIRT,
+    HOODIE,
+    SWEATSHIRT,
+    
+    // Design Categories
+    ANIME,
+    CARTOON,
+    MOVIES,
+    MUSIC,
+    FUNNY,
+    QUOTES,
+    ABSTRACT,
+    NATURE,
+    RETRO,
+    MINIMALIST,
+    CUSTOM
 }
