@@ -22,10 +22,12 @@ export const AdminProvider = ({ children }) => {
 
   const createProduct = async (data) => {
     try {
+      console.log('Creating product with data:', data);
       await productApi.createProduct(data);
       toast.success('Product created!');
       fetchProducts();
     } catch (error) {
+      console.error('Error creating product:', error);
       toast.error('Failed to create product');
     }
   };
@@ -36,6 +38,7 @@ export const AdminProvider = ({ children }) => {
       toast.success('Product updated!');
       fetchProducts();
     } catch (error) {
+      console.error('Error updating product:', error);
       toast.error('Failed to update product');
     }
   };

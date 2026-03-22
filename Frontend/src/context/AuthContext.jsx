@@ -13,14 +13,27 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await authAPI.login({ email, password });
-      const { accessToken, refreshToken } = response.data.data;
+      
+      // ✅ FIXED: Extract data correctly from response
+      const { accessToken, refreshToken, role, name } = response.data.data;
+      
       localStorage.setItem('token', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
       setToken(accessToken);
-      setUser({ email });
-      toast.success('Login Successful! 🎉');
+      
+      // ✅ FIXED: Use extracted role and name
+      const userRole = role || 'USER';
+      const userName = name || email.split('@')[0];
+      
+      localStorage.setItem('role', userRole);
+      localStorage.setItem('email', email);
+      localStorage.setItem('name', userName);
+      setUser({ email, role: userRole, name: userName });
+
+      toast.success('Login Successful!');
       return { success: true };
     } catch (error) {
+      console.error('Login error:', error); // Debug log
       const message = error.response?.data?.message || 'Login failed';
       toast.error(message);
       return { success: false, error: message };
@@ -92,6 +105,9 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
+    localStorage.removeItem('role');
+    localStorage.removeItem('email');
+    localStorage.removeItem('name');
     setUser(null);
     setToken(null);
     toast.success('Logged out successfully');
@@ -99,21 +115,25 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (token) {
-      setUser({ email: 'user@example.com' });
+      const role = localStorage.getItem('role') || 'USER';
+      const email = localStorage.getItem('email') || '';
+      const name = localStorage.getItem('name') || '';
+      setUser({ email, role, name });
     }
   }, [token]);
 
   const value = {
-    user,
-    loading,
-    token,
-    login,
+    user, 
+    loading, 
+    token, 
+    login, 
     register,
-    verifyOtp,
-    forgotPassword,
+    verifyOtp, 
+    forgotPassword, 
     resetPassword,
-    logout,
-    isAuthenticated: !!user
+    logout, 
+    isAuthenticated: !!user,
+    isAdmin: user?.role === 'ADMIN'  
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

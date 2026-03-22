@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useState, useEffect } from 'react';
 
 const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -28,8 +28,8 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo */}
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className={`text-2xl font-light tracking-wider transition-all duration-300 hover:scale-105 ${
               isScrolled ? 'text-gray-900' : 'text-white'
             }`}
@@ -39,8 +39,8 @@ const Navbar = () => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link 
-              to="/products" 
+            <Link
+              to="/products"
               className={`relative group transition-colors duration-300 ${
                 isScrolled ? 'text-gray-700 hover:text-black' : 'text-white/90 hover:text-white'
               }`}
@@ -50,12 +50,36 @@ const Navbar = () => {
                 isScrolled ? 'bg-black' : 'bg-white'
               }`}></span>
             </Link>
-            
+
             {user ? (
               <>
-                <span className={`text-sm ${isScrolled ? 'text-gray-600' : 'text-white/80'}`}>
-                  Hi, {user.email?.split('@')[0]}
+                {/* Admin Panel Link - sirf admin ko dikhega */}
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    className={`relative group transition-colors duration-300 ${
+                      isScrolled ? 'text-gray-700 hover:text-black' : 'text-white/90 hover:text-white'
+                    }`}
+                  >
+                    Admin Panel
+                    <span className={`absolute -bottom-1 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full ${
+                      isScrolled ? 'bg-black' : 'bg-white'
+                    }`}></span>
+                  </Link>
+                )}
+
+                <span className={`text-sm flex items-center gap-2 ${isScrolled ? 'text-gray-600' : 'text-white/80'}`}>
+                  Hi, {user.name || user.email?.split('@')[0]}
+                  {/* Admin badge */}
+                  {isAdmin && (
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                      isScrolled ? 'bg-black text-white' : 'bg-white text-black'
+                    }`}>
+                      Admin
+                    </span>
+                  )}
                 </span>
+
                 <button
                   onClick={handleLogout}
                   className={`px-4 py-2 rounded-full border transition-all duration-300 hover:scale-105 ${
@@ -124,12 +148,27 @@ const Navbar = () => {
             >
               Products
             </Link>
-            
+
             {user ? (
               <>
+                {/* Admin Panel Link mobile - sirf admin ko dikhega */}
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`block transition-colors duration-300 ${
+                      isScrolled ? 'text-gray-700 hover:text-black' : 'text-white/90 hover:text-white'
+                    }`}
+                  >
+                    Admin Panel
+                  </Link>
+                )}
+
                 <span className={`block text-sm ${isScrolled ? 'text-gray-600' : 'text-white/80'}`}>
-                  Hi, {user.email?.split('@')[0]}
+                  Hi, {user.name || user.email?.split('@')[0]}
+                  {isAdmin && ' (Admin)'}
                 </span>
+
                 <button
                   onClick={() => {
                     handleLogout();

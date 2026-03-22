@@ -8,7 +8,7 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <Toaster 
-          position="top-right"
+          position="center"
           toastOptions={{
             duration: 3000,
             style: {

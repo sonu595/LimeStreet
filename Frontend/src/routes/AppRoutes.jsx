@@ -1,6 +1,12 @@
 import { Routes, Route } from 'react-router-dom';
 import { ProtectedRoute, PublicRoute } from './ProtectedRoute';
 
+import { AdminRoute } from './AdminRoute';
+import AdminDashboard from '../pages/admin/AdminDashboard';
+import AdminProducts from '../pages/admin/AdminProduct';
+import AdminAddProduct from '../pages/admin/AdminAddProduct';
+import AdminEditProduct from '../pages/admin/AdminEditProduct';
+
 import Login from '../components/auth/Login';
 import Register from '../components/auth/Register';
 import VerifyOTP from '../components/auth/VerifyOTP';
@@ -18,7 +24,12 @@ const AppRoutes = () => {
       <Route path="/products" element={<Products />} />
       <Route path="/product/:id" element={<ProductDetailPage />} />
 
-      {/* Auth Routes - redirect to dashboard if already logged in */}
+      <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+      <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
+      <Route path="/admin/products/add" element={<AdminRoute><AdminAddProduct /></AdminRoute>} />
+      <Route path="/admin/products/edit/:id" element={<AdminRoute><AdminEditProduct /></AdminRoute>} />
+
+
       <Route path="/login" element={
         <PublicRoute>
           <Login />

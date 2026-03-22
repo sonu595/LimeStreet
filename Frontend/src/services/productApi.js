@@ -20,9 +20,9 @@ export const productApi = {
   getNewArrivals: () => API.get('/products/new-arrivals'),
   getBestSellers: () => API.get('/products/best-sellers'),
   
-  createProduct: (productData) => API.post('/products', productData),
-  updateProduct: (id, productData) => API.put(`/products/${id}`, productData),
-  deleteProduct: (id) => API.delete(`/products/${id}`)
+  createProduct: (productData) => API.post('/admin/products', productData),
+  updateProduct: (id, productData) => API.put(`/admin/products/${id}`, productData),
+  deleteProduct: (id) => API.delete(`/admin/products/${id}`)
 };
 
 export default productApi;

@@ -1,41 +1,39 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useProducts } from '../context/ProductContext';
-import ProductGrid from '../components/products/ProductGrid';
-import ProductFilters from '../components/products/ProductFilters';
-import { motion, AnimatePresence } from 'framer-motion';
+import ProductCard from '../components/products/ProductCard';
 import Navbar from '../components/layout/Navbar';
 
 const Products = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { 
-    filteredProducts, 
-    loading, 
-    error, 
-    fetchAllProducts,
-    fetchProductsByCategory,
-    searchProducts,
-    filterByPrice,
-    sortProducts
+    filteredProducts,  // Products after filtering
+    loading,           // Loading state
+    error,             // Error state
+    fetchAllProducts,  // Function to get all products
+    fetchProductsByCategory, // Function to get products by category
+    searchProducts     // Function to search products
   } = useProducts();
 
   const [searchInput, setSearchInput] = useState('');
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
-  const categories = ['MEN', 'WOMEN', 'KIDS', 'ACCESSORIES', 'FOOTWEAR', 'BAGS', 'WATCHES', 'SPORTS'];
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
-  // Get category from URL
+  // Get category from URL when page loads
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const category = params.get('category');
+    
     if (category) {
+      setSelectedCategory(category);
       fetchProductsByCategory(category);
     } else {
+      setSelectedCategory('all');
       fetchAllProducts();
     }
   }, [location.search]);
 
+  // Handle search form submission
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchInput.trim()) {
@@ -46,7 +44,8 @@ const Products = () => {
     }
   };
 
-  const handleCategoryChange = (category) => {
+  // Handle category filter click
+  const handleCategoryClick = (category) => {
     if (category === 'all') {
       navigate('/products');
       fetchAllProducts();
@@ -54,156 +53,141 @@ const Products = () => {
       navigate(`/products?category=${category}`);
       fetchProductsByCategory(category);
     }
+    setSelectedCategory(category);
   };
 
+  // Go back to previous page
   const handleBack = () => {
     navigate(-1);
   };
 
-  const pageVariants = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -20 }
-  };
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <div className="pt-32 text-center">
+          <div className="inline-block w-8 h-8 border-4 border-gray-300 border-t-black rounded-full animate-spin"></div>
+          <p className="mt-4 text-gray-500">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <div className="pt-32 text-center">
+          <p className="text-red-500">Error: {error}</p>
+          <button 
+            onClick={() => fetchAllProducts()}
+            className="mt-4 px-4 py-2 bg-black text-white rounded"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <motion.div
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      variants={pageVariants}
-      transition={{ duration: 0.4 }}
-      className="min-h-screen bg-white"
-    >
+    <div className="min-h-screen bg-white">
       <Navbar />
       
       <div className="pt-20">
         <div className="max-w-7xl mx-auto px-4 py-8">
-          {/* Header with Back Button */}
-          <div className="flex items-center justify-between mb-8">
-            <button
-              onClick={handleBack}
-              className="group flex items-center text-gray-600 hover:text-black transition-colors"
-            >
-              <svg 
-                className="w-5 h-5 mr-2 transform transition-transform group-hover:-translate-x-1" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              <span className="text-sm font-light">Back</span>
-            </button>
+          
+          {/* Back Button */}
+          <button
+            onClick={handleBack}
+            className="mb-8 text-gray-600 hover:text-black transition"
+          >
+            ← Back
+          </button>
 
-            <h1 className="text-3xl font-light text-gray-900">Our Collection</h1>
-            
-            {/* Mobile Filter Button */}
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="lg:hidden p-2 text-gray-600 hover:text-black transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-              </svg>
-            </button>
-
-            {/* Desktop spacer */}
-            <div className="w-20 hidden lg:block" />
-          </div>
+          {/* Page Title */}
+          <h1 className="text-3xl text-center mb-8">Our Products</h1>
 
           {/* Search Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="max-w-2xl mx-auto mb-12"
-          >
-            <form onSubmit={handleSearch} className="relative">
+          <div className="max-w-2xl mx-auto mb-8">
+            <form onSubmit={handleSearch} className="flex gap-2">
               <input
                 type="text"
                 placeholder="Search products..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
-                className={`w-full px-6 py-4 border rounded-full transition-all duration-300 focus:outline-none ${
-                  isSearchFocused 
-                    ? 'border-black shadow-lg' 
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-black"
               />
               <button
                 type="submit"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 px-6 py-2 bg-black text-white rounded-full hover:bg-gray-800 transition-all duration-300"
+                className="px-6 py-2 bg-black text-white rounded hover:bg-gray-800 transition"
               >
                 Search
               </button>
             </form>
-          </motion.div>
-
-          {/* Main Content */}
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Filters Sidebar - Desktop */}
-            <div className="hidden lg:block lg:w-80">
-              <ProductFilters
-                onCategoryChange={handleCategoryChange}
-                onPriceFilter={filterByPrice}
-                onSort={sortProducts}
-                categories={categories}
-              />
-            </div>
-
-            {/* Mobile Filters Drawer */}
-            <AnimatePresence>
-              {showFilters && (
-                <>
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onClick={() => setShowFilters(false)}
-                    className="fixed inset-0 bg-black/20 z-40 lg:hidden"
-                  />
-                  <motion.div
-                    initial={{ x: '100%' }}
-                    animate={{ x: 0 }}
-                    exit={{ x: '100%' }}
-                    transition={{ type: 'tween', duration: 0.3 }}
-                    className="fixed right-0 top-0 bottom-0 w-80 bg-white z-50 lg:hidden overflow-y-auto"
-                  >
-                    <div className="p-6">
-                      <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-lg font-light">Filters</h3>
-                        <button
-                          onClick={() => setShowFilters(false)}
-                          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-                      <ProductFilters
-                        onCategoryChange={handleCategoryChange}
-                        onPriceFilter={filterByPrice}
-                        onSort={sortProducts}
-                        categories={categories}
-                      />
-                    </div>
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-
-            {/* Products Grid */}
-            <div className="flex-1">
-              <ProductGrid products={filteredProducts} loading={loading} error={error} />
-            </div>
           </div>
+
+          {/* Category Filters */}
+          <div className="flex flex-wrap justify-center gap-2 mb-8">
+            <button
+              onClick={() => handleCategoryClick('all')}
+              className={`px-4 py-2 rounded-full transition ${
+                selectedCategory === 'all' 
+                  ? 'bg-black text-white' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => handleCategoryClick('tshirts')}
+              className={`px-4 py-2 rounded-full transition ${
+                selectedCategory === 'tshirts' 
+                  ? 'bg-black text-white' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              T-Shirts
+            </button>
+            <button
+              onClick={() => handleCategoryClick('hoodies')}
+              className={`px-4 py-2 rounded-full transition ${
+                selectedCategory === 'hoodies' 
+                  ? 'bg-black text-white' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Hoodies
+            </button>
+            <button
+              onClick={() => handleCategoryClick('jackets')}
+              className={`px-4 py-2 rounded-full transition ${
+                selectedCategory === 'jackets' 
+                  ? 'bg-black text-white' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Jackets
+            </button>
+          </div>
+
+          {/* Products Grid */}
+          {filteredProducts.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500">No products found.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {filteredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
