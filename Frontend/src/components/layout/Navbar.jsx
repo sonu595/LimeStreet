@@ -1,9 +1,17 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useState, useEffect } from 'react';
+import { useShop } from '../../context/ShopContext';
+
+const CountBadge = ({ count }) => (
+  <span className="ml-1 min-w-5 h-5 px-1 rounded-full bg-black text-white text-[10px] inline-flex items-center justify-center">
+    {count}
+  </span>
+);
 
 const Navbar = () => {
   const { user, logout, isAdmin } = useAuth();
+  const { cartCount, wishlistCount } = useShop();
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -27,7 +35,6 @@ const Navbar = () => {
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 md:h-20">
-          {/* Logo */}
           <Link
             to="/"
             className={`text-2xl font-light tracking-wider transition-all duration-300 hover:scale-105 ${
@@ -37,8 +44,7 @@ const Navbar = () => {
             LIME STREET
           </Link>
 
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-7">
             <Link
               to="/products"
               className={`relative group transition-colors duration-300 ${
@@ -46,14 +52,28 @@ const Navbar = () => {
               }`}
             >
               Products
-              <span className={`absolute -bottom-1 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full ${
-                isScrolled ? 'bg-black' : 'bg-white'
-              }`}></span>
+            </Link>
+
+            <Link
+              to="/wishlist"
+              className={`relative transition-colors duration-300 inline-flex items-center ${
+                isScrolled ? 'text-gray-700 hover:text-black' : 'text-white/90 hover:text-white'
+              }`}
+            >
+              Wishlist {wishlistCount > 0 && <CountBadge count={wishlistCount} />}
+            </Link>
+
+            <Link
+              to="/cart"
+              className={`relative transition-colors duration-300 inline-flex items-center ${
+                isScrolled ? 'text-gray-700 hover:text-black' : 'text-white/90 hover:text-white'
+              }`}
+            >
+              Cart {cartCount > 0 && <CountBadge count={cartCount} />}
             </Link>
 
             {user ? (
               <>
-                {/* Admin Panel Link - sirf admin ko dikhega */}
                 {isAdmin && (
                   <Link
                     to="/admin"
@@ -62,15 +82,11 @@ const Navbar = () => {
                     }`}
                   >
                     Admin Panel
-                    <span className={`absolute -bottom-1 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full ${
-                      isScrolled ? 'bg-black' : 'bg-white'
-                    }`}></span>
                   </Link>
                 )}
 
                 <span className={`text-sm flex items-center gap-2 ${isScrolled ? 'text-gray-600' : 'text-white/80'}`}>
                   Hi, {user.name || user.email?.split('@')[0]}
-                  {/* Admin badge */}
                   {isAdmin && (
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                       isScrolled ? 'bg-black text-white' : 'bg-white text-black'
@@ -83,8 +99,8 @@ const Navbar = () => {
                 <button
                   onClick={handleLogout}
                   className={`px-4 py-2 rounded-full border transition-all duration-300 hover:scale-105 ${
-                    isScrolled 
-                      ? 'border-gray-300 text-gray-700 hover:bg-black hover:text-white hover:border-black' 
+                    isScrolled
+                      ? 'border-gray-300 text-gray-700 hover:bg-black hover:text-white hover:border-black'
                       : 'border-white/30 text-white hover:bg-white hover:text-black'
                   }`}
                 >
@@ -96,9 +112,7 @@ const Navbar = () => {
                 <Link
                   to="/login"
                   className={`px-4 py-2 transition-all duration-300 hover:scale-105 ${
-                    isScrolled 
-                      ? 'text-gray-700 hover:text-black' 
-                      : 'text-white/90 hover:text-white'
+                    isScrolled ? 'text-gray-700 hover:text-black' : 'text-white/90 hover:text-white'
                   }`}
                 >
                   Login
@@ -106,8 +120,8 @@ const Navbar = () => {
                 <Link
                   to="/register"
                   className={`px-4 py-2 rounded-full border transition-all duration-300 hover:scale-105 ${
-                    isScrolled 
-                      ? 'border-gray-300 text-gray-700 hover:bg-black hover:text-white hover:border-black' 
+                    isScrolled
+                      ? 'border-gray-300 text-gray-700 hover:bg-black hover:text-white hover:border-black'
                       : 'border-white/30 text-white hover:bg-white hover:text-black'
                   }`}
                 >
@@ -117,7 +131,6 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="md:hidden relative w-10 h-10 focus:outline-none"
@@ -134,7 +147,6 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Mobile Menu */}
         <div className={`md:hidden overflow-hidden transition-all duration-500 ${
           isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
         }`}>
@@ -148,10 +160,27 @@ const Navbar = () => {
             >
               Products
             </Link>
+            <Link
+              to="/wishlist"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`block transition-colors duration-300 ${
+                isScrolled ? 'text-gray-700 hover:text-black' : 'text-white/90 hover:text-white'
+              }`}
+            >
+              Wishlist ({wishlistCount})
+            </Link>
+            <Link
+              to="/cart"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`block transition-colors duration-300 ${
+                isScrolled ? 'text-gray-700 hover:text-black' : 'text-white/90 hover:text-white'
+              }`}
+            >
+              Cart ({cartCount})
+            </Link>
 
             {user ? (
               <>
-                {/* Admin Panel Link mobile - sirf admin ko dikhega */}
                 {isAdmin && (
                   <Link
                     to="/admin"
@@ -175,8 +204,8 @@ const Navbar = () => {
                     setIsMobileMenuOpen(false);
                   }}
                   className={`block w-full text-left px-4 py-2 rounded-full border transition-all duration-300 ${
-                    isScrolled 
-                      ? 'border-gray-300 text-gray-700 hover:bg-black hover:text-white' 
+                    isScrolled
+                      ? 'border-gray-300 text-gray-700 hover:bg-black hover:text-white'
                       : 'border-white/30 text-white hover:bg-white hover:text-black'
                   }`}
                 >
@@ -198,8 +227,8 @@ const Navbar = () => {
                   to="/register"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`block px-4 py-2 rounded-full border transition-all duration-300 ${
-                    isScrolled 
-                      ? 'border-gray-300 text-gray-700 hover:bg-black hover:text-white' 
+                    isScrolled
+                      ? 'border-gray-300 text-gray-700 hover:bg-black hover:text-white'
                       : 'border-white/30 text-white hover:bg-white hover:text-black'
                   }`}
                 >
