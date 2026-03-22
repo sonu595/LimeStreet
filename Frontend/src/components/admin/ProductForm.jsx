@@ -4,6 +4,9 @@ import { useNavigate } from 'react-router-dom';
 const ProductForm = ({ product = {}, onSubmit }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [convertingImage, setConvertingImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState(product.imageUrl || '');
+  
   const [form, setForm] = useState({
     name: product.name || '',
     description: product.description || '',
@@ -16,7 +19,8 @@ const ProductForm = ({ product = {}, onSubmit }) => {
     size: product.size || 'M',
     color: product.color || 'Black',
     brand: product.brand || '',
-    imageUrl: product.imageUrl || ''
+    imageBase64: '',        // Base64 string for new image
+    imageUrl: product.imageUrl || ''  // Existing URL
   });
 
   const [errors, setErrors] = useState({});
@@ -28,15 +32,63 @@ const ProductForm = ({ product = {}, onSubmit }) => {
   const fabrics = ['Cotton', 'Polyester', 'Linen', 'Wool', 'Silk', 'Blend'];
   const colors = ['Black', 'White', 'Red', 'Blue', 'Green', 'Yellow', 'Gray', 'Navy', 'Brown'];
 
+  // ✅ Convert File to Base64
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  // ✅ Handle file selection
+  const handleFileSelect = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file (JPEG, PNG, GIF, etc.)');
+      return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size should be less than 5MB');
+      return;
+    }
+    
+    setConvertingImage(true);
+    
+    try {
+      // Convert file to Base64
+      const base64String = await fileToBase64(file);
+      
+      setForm({
+        ...form,
+        imageBase64: base64String,
+        imageUrl: ''  // Clear old URL if any
+      });
+      
+      // Preview
+      setImagePreview(base64String);
+      
+    } catch (error) {
+      console.error('Error converting file:', error);
+      alert('Failed to process image');
+    } finally {
+      setConvertingImage(false);
+    }
+  };
+
   const validateForm = () => {
     const newErrors = {};
-    
     if (!form.name.trim()) newErrors.name = 'Product name is required';
     if (!form.price || form.price <= 0) newErrors.price = 'Valid price is required';
     if (!form.stock || form.stock < 0) newErrors.stock = 'Valid stock is required';
     if (!form.brand.trim()) newErrors.brand = 'Brand is required';
-    if (!form.imageUrl.trim()) newErrors.imageUrl = 'Image URL is required';
-    
+    if (!form.imageBase64 && !form.imageUrl) newErrors.image = 'Product image is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -50,15 +102,30 @@ const ProductForm = ({ product = {}, onSubmit }) => {
     
     setLoading(true);
     try {
-      // ✅ Ensure numeric fields are numbers
+      // ✅ Prepare JSON data
       const submitData = {
-        ...form,
+        name: form.name,
+        description: form.description,
         price: Number(form.price),
-        stock: Number(form.stock)
+        stock: Number(form.stock),
+        category: form.category,
+        tshirtType: form.tshirtType,
+        designCategory: form.designCategory,
+        fabric: form.fabric,
+        size: form.size,
+        color: form.color,
+        brand: form.brand,
+        // Send Base64 if new image, otherwise send existing URL
+        imageBase64: form.imageBase64,
+        imageUrl: form.imageUrl
       };
       
+      // Remove empty fields
+      if (!submitData.imageBase64) delete submitData.imageBase64;
+      if (!submitData.imageUrl) delete submitData.imageUrl;
+      
       await onSubmit(submitData);
-      // Success - navigate will happen in parent
+      
     } catch (error) {
       console.error('Submit error:', error);
       alert('Failed to save product. Please check console for details.');
@@ -103,7 +170,7 @@ const ProductForm = ({ product = {}, onSubmit }) => {
               className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black ${
                 errors.brand ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="e.g., Nike, Adidas, Local Brand"
+              placeholder="e.g., Nike, Adidas"
             />
             {errors.brand && <p className="text-red-500 text-sm mt-1">{errors.brand}</p>}
           </div>
@@ -123,8 +190,6 @@ const ProductForm = ({ product = {}, onSubmit }) => {
                 errors.price ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="e.g., 999"
-              min="0"
-              step="1"
             />
             {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
           </div>
@@ -141,8 +206,6 @@ const ProductForm = ({ product = {}, onSubmit }) => {
                 errors.stock ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="e.g., 100"
-              min="0"
-              step="1"
             />
             {errors.stock && <p className="text-red-500 text-sm mt-1">{errors.stock}</p>}
           </div>
@@ -157,7 +220,7 @@ const ProductForm = ({ product = {}, onSubmit }) => {
             <select
               value={form.category}
               onChange={(e) => setForm({...form, category: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+              className="w-full p-3 border border-gray-300 rounded-lg"
             >
               {categories.map(c => (
                 <option key={c} value={c}>{c}</option>
@@ -172,7 +235,7 @@ const ProductForm = ({ product = {}, onSubmit }) => {
             <select
               value={form.tshirtType}
               onChange={(e) => setForm({...form, tshirtType: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+              className="w-full p-3 border border-gray-300 rounded-lg"
             >
               {types.map(t => (
                 <option key={t} value={t}>{t.replace('_', ' ')}</option>
@@ -181,7 +244,7 @@ const ProductForm = ({ product = {}, onSubmit }) => {
           </div>
         </div>
 
-        {/* Row 4: Design Category and Brand */}
+        {/* Row 4: Design Category and Fabric */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -190,7 +253,7 @@ const ProductForm = ({ product = {}, onSubmit }) => {
             <select
               value={form.designCategory}
               onChange={(e) => setForm({...form, designCategory: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+              className="w-full p-3 border border-gray-300 rounded-lg"
             >
               {designs.map(d => (
                 <option key={d} value={d}>{d}</option>
@@ -205,7 +268,7 @@ const ProductForm = ({ product = {}, onSubmit }) => {
             <select
               value={form.fabric}
               onChange={(e) => setForm({...form, fabric: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+              className="w-full p-3 border border-gray-300 rounded-lg"
             >
               {fabrics.map(f => (
                 <option key={f} value={f}>{f}</option>
@@ -223,7 +286,7 @@ const ProductForm = ({ product = {}, onSubmit }) => {
             <select
               value={form.size}
               onChange={(e) => setForm({...form, size: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+              className="w-full p-3 border border-gray-300 rounded-lg"
             >
               {sizes.map(s => (
                 <option key={s} value={s}>{s}</option>
@@ -238,7 +301,7 @@ const ProductForm = ({ product = {}, onSubmit }) => {
             <select
               value={form.color}
               onChange={(e) => setForm({...form, color: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+              className="w-full p-3 border border-gray-300 rounded-lg"
             >
               {colors.map(c => (
                 <option key={c} value={c}>{c}</option>
@@ -255,62 +318,68 @@ const ProductForm = ({ product = {}, onSubmit }) => {
           <textarea
             value={form.description}
             onChange={(e) => setForm({...form, description: e.target.value})}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+            className="w-full p-3 border border-gray-300 rounded-lg"
             rows="3"
             placeholder="Product description, features, care instructions..."
           />
         </div>
 
-        {/* Image URL */}
+        {/* Image Upload */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Image URL *
+            Product Image *
           </label>
-          <input
-            type="text"
-            value={form.imageUrl}
-            onChange={(e) => setForm({...form, imageUrl: e.target.value})}
-            className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black ${
-              errors.imageUrl ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="https://example.com/image.jpg"
-          />
-          {errors.imageUrl && <p className="text-red-500 text-sm mt-1">{errors.imageUrl}</p>}
           
           {/* Image Preview */}
-          {form.imageUrl && (
-            <div className="mt-2">
-              <p className="text-sm text-gray-500 mb-1">Preview:</p>
+          {imagePreview && (
+            <div className="mb-3 relative inline-block">
               <img 
-                src={form.imageUrl} 
+                src={imagePreview} 
                 alt="Preview" 
                 className="w-32 h-32 object-cover rounded-lg border"
-                onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/150?text=Invalid+URL';
-                }}
               />
+              <button
+                type="button"
+                onClick={() => {
+                  setForm({...form, imageBase64: '', imageUrl: ''});
+                  setImagePreview('');
+                }}
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
+              >
+                ×
+              </button>
             </div>
           )}
+          
+          {/* File Input */}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileSelect}
+            disabled={convertingImage}
+            className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black ${
+              errors.image ? 'border-red-500' : 'border-gray-300'
+            }`}
+          />
+          
+          {convertingImage && (
+            <p className="text-blue-500 text-sm mt-1">Converting image to Base64...</p>
+          )}
+          
+          {errors.image && <p className="text-red-500 text-sm mt-1">{errors.image}</p>}
+          <p className="text-xs text-gray-400 mt-1">
+            JPEG, PNG, GIF, WebP. Max size: 5MB. Image will be sent as Base64
+          </p>
         </div>
 
         {/* Submit Buttons */}
         <div className="flex gap-4 pt-4">
           <button
             type="submit"
-            disabled={loading}
-            className="flex-1 px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loading || convertingImage}
+            className="flex-1 px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition disabled:opacity-50"
           >
-            {loading ? (
-              <span className="flex items-center justify-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Saving...
-              </span>
-            ) : (
-              product.id ? 'Update Product' : 'Create Product'
-            )}
+            {loading ? 'Saving...' : (product.id ? 'Update Product' : 'Create Product')}
           </button>
           
           <button

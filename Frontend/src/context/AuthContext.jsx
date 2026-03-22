@@ -14,14 +14,14 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.login({ email, password });
       
-      // ✅ FIXED: Extract data correctly from response
+      // Extract data correctly from response
       const { accessToken, refreshToken, role, name } = response.data.data;
       
       localStorage.setItem('token', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
       setToken(accessToken);
       
-      // ✅ FIXED: Use extracted role and name
+      // Use extracted role and name
       const userRole = role || 'USER';
       const userName = name || email.split('@')[0];
       

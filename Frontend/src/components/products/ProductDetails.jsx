@@ -10,6 +10,7 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -21,6 +22,19 @@ const ProductDetail = () => {
     fetchProduct();
     window.scrollTo(0, 0);
   }, [id]);
+
+  // ✅ Function to get full image URL
+  const getImageUrl = (imageUrl) => {
+    if (!imageUrl || imageError) {
+      return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='750' viewBox='0 0 600 750'%3E%3Crect width='600' height='750' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='20' fill='%23999' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
+    }
+    
+    if (imageUrl.startsWith('/uploads/')) {
+      return `http://localhost:8080${imageUrl}`;
+    }
+    
+    return imageUrl;
+  };
 
   if (loading) {
     return (
@@ -46,17 +60,16 @@ const ProductDetail = () => {
     );
   }
 
-  // Mock multiple images
+  // ✅ Create images array with full URLs
   const images = [
-    product.imageUrl,
-    product.imageUrl?.replace('?', '?random=1'),
-    product.imageUrl?.replace('?', '?random=2'),
+    getImageUrl(product.imageUrl),
+    product.imageUrl ? getImageUrl(product.imageUrl) + '?random=1' : null,
+    product.imageUrl ? getImageUrl(product.imageUrl) + '?random=2' : null,
   ].filter(Boolean);
 
   return (
     <div className="pt-20 min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 py-12">
-        {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
           className="group mb-8 flex items-center text-gray-600 hover:text-black transition-colors duration-300"
@@ -76,13 +89,13 @@ const ProductDetail = () => {
               <img
                 src={images[selectedImage]}
                 alt={product.name}
+                onError={() => setImageError(true)}
                 className={`w-full h-full object-cover transition-transform duration-700 ${
                   isZoomed ? 'scale-150' : 'scale-100'
                 }`}
               />
             </div>
             
-            {/* Thumbnails */}
             <div className="grid grid-cols-3 gap-4">
               {images.map((img, index) => (
                 <button
@@ -90,7 +103,7 @@ const ProductDetail = () => {
                   onClick={() => setSelectedImage(index)}
                   className={`relative aspect-square rounded-lg overflow-hidden transition-all duration-300 ${
                     selectedImage === index ? 'ring-2 ring-black' : 'opacity-70 hover:opacity-100'
-              }`}
+                  }`}
                 >
                   <img src={img} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
                 </button>
@@ -122,7 +135,6 @@ const ProductDetail = () => {
               </p>
             </div>
 
-            {/* Stock Status */}
             <div className={`py-4 border-t border-b border-gray-100 ${
               product.stock > 0 ? 'text-green-600' : 'text-red-600'
             }`}>
@@ -131,7 +143,6 @@ const ProductDetail = () => {
                 : '✗ Out of Stock'}
             </div>
 
-            {/* Quantity & Actions */}
             {product.stock > 0 && (
               <>
                 <div className="flex items-center space-x-4">

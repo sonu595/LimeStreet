@@ -26,5 +26,6 @@ public class ProductRequest {
     private String size;            // ✅ ADD THIS
     private String color;           // ✅ ADD THIS
     private String brand;           // ✅ ALREADY HAVE
-    private String imageUrl;        // ✅ ALREADY HAVE
+    private String imageUrl;       // ✅ ALREADY HAVE
+    private String imageBase64;
 }
