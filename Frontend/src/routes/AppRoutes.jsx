@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
-import { ProtectedRoute, PublicRoute } from './ProtectedRoute';
+import { PublicRoute } from './ProtectedRoute';
 
 import { AdminRoute } from './AdminRoute';
 import AdminDashboard from '../pages/admin/AdminDashboard';
@@ -15,6 +15,8 @@ import ResetPassword from '../components/auth/ResetPassword';
 import Home from '../pages/Home';
 import Products from '../pages/Products';
 import ProductDetailPage from '../pages/ProductDetailPage';
+import Wishlist from '../pages/Wishlist';
+import Cart from '../pages/Cart';
 
 const AppRoutes = () => {
   return (
@@ -23,6 +25,8 @@ const AppRoutes = () => {
       <Route path="/" element={<Home />} />
       <Route path="/products" element={<Products />} />
       <Route path="/product/:id" element={<ProductDetailPage />} />
+      <Route path="/wishlist" element={<Wishlist />} />
+      <Route path="/cart" element={<Cart />} />
 
       <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
       <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
