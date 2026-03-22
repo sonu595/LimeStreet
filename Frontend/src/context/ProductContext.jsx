@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { productApi } from '../services/productApi';
 
 const ProductContext = createContext();
@@ -13,7 +13,7 @@ export const ProductProvider = ({ children }) => {
   const [newArrivals, setNewArrivals] = useState([]);
   const [bestSellers, setBestSellers] = useState([]);
 
-  const fetchAllProducts = async () => {
+  const fetchAllProducts = useCallback(async () => {
     setLoading(true);
     try {
       const response = await productApi.getAllProducts();
@@ -26,27 +26,27 @@ export const ProductProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchNewArrivals = async () => {
+  const fetchNewArrivals = useCallback(async () => {
     try {
       const response = await productApi.getNewArrivals();
       setNewArrivals(response.data.data);
     } catch (err) {
       console.error('Failed to fetch new arrivals', err);
     }
-  };
+  }, []);
 
-  const fetchBestSellers = async () => {
+  const fetchBestSellers = useCallback(async () => {
     try {
       const response = await productApi.getBestSellers();
       setBestSellers(response.data.data);
     } catch (err) {
       console.error('Failed to fetch best sellers', err);
     }
-  };
+  }, []);
 
-  const fetchProductsByCategory = async (category) => {
+  const fetchProductsByCategory = useCallback(async (category) => {
     setLoading(true);
     try {
       const response = await productApi.getProductsByCategory(category);
@@ -59,9 +59,9 @@ export const ProductProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const searchProducts = async (query) => {
+  const searchProducts = useCallback(async (query) => {
     setLoading(true);
     try {
       const response = await productApi.searchProducts(query);
@@ -74,9 +74,9 @@ export const ProductProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const getProductById = async (id) => {
+  const getProductById = useCallback(async (id) => {
     setLoading(true);
     try {
       const response = await productApi.getProductById(id);
@@ -89,15 +89,15 @@ export const ProductProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const filterByPrice = (min, max) => {
-    const filtered = products.filter(p => p.price >= min && p.price <= max);
+    const filtered = products.filter((p) => p.price >= min && p.price <= max);
     setFilteredProducts(filtered);
   };
 
   const sortProducts = (type) => {
-    let sorted = [...filteredProducts];
+    const sorted = [...filteredProducts];
     if (type === 'price-low') {
       sorted.sort((a, b) => a.price - b.price);
     } else if (type === 'price-high') {
@@ -114,7 +114,7 @@ export const ProductProvider = ({ children }) => {
     fetchAllProducts();
     fetchNewArrivals();
     fetchBestSellers();
-  }, []);
+  }, [fetchAllProducts, fetchNewArrivals, fetchBestSellers]);
 
   const value = {
     products,
@@ -130,16 +130,12 @@ export const ProductProvider = ({ children }) => {
     searchProducts,
     getProductById,
     filterByPrice,
-    fetchNewArrivals,    // 
-    fetchBestSellers,    // 
-    sortProducts
+    fetchNewArrivals,
+    fetchBestSellers,
+    sortProducts,
   };
 
-  return (
-    <ProductContext.Provider value={value}>
-      {children}
-    </ProductContext.Provider>
-  );
+  return <ProductContext.Provider value={value}>{children}</ProductContext.Provider>;
 };
 
 export const useProducts = () => {

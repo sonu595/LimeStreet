@@ -15,13 +15,13 @@ const Home = () => {
   useEffect(() => {
     fetchNewArrivals();
     fetchBestSellers();
-  }, []);
+  }, [fetchNewArrivals, fetchBestSellers]);
 
   return (
     <div className="bg-white">
       <Navbar />
 
-      <section className="relative h-screen flex items-center justify-center">
+      <section className="relative min-h-screen flex items-center justify-center">
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b"
@@ -37,8 +37,8 @@ const Home = () => {
           transition={{ duration: 0.7 }}
           className="relative z-10 text-center text-white px-4"
         >
-          <h1 className="text-5xl md:text-6xl mb-4">Wear Your Story</h1>
-          <p className="mb-8">Custom printed t-shirts for you</p>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl mb-4">Wear Your Story</h1>
+          <p className="mb-8 text-sm sm:text-base">Custom printed t-shirts for you</p>
           <Link to="/products">
             <button className="px-8 py-3 bg-white text-black rounded-full hover:scale-105 transition-transform">
               Shop Now
@@ -96,7 +96,7 @@ const Home = () => {
       <section className="py-16 px-4">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl text-center mb-10">Shop by Category</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <Link to="/products?category=tshirts">
               <div className="bg-gray-200 h-32 flex items-center justify-center rounded-lg hover:bg-gray-300 transition">
                 T-Shirts

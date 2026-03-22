@@ -1,50 +1,115 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useAuth } from './AuthContext';
+import { shopApi } from '../services/shopApi';
+import {
+  EMPTY_STATE,
+  getStorageKey,
+  mergeShopStates,
+  normalizeShopState,
+  readState,
+  writeState,
+} from '../utils/shop';
 
 const ShopContext = createContext();
-
-const EMPTY_STATE = { wishlist: [], cart: [] };
-const getStorageKey = (email) => (email ? `shop_state_${email}` : 'shop_state_guest');
-
-const readState = (key) => {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return EMPTY_STATE;
-
-    const parsed = JSON.parse(raw);
-    return {
-      wishlist: Array.isArray(parsed.wishlist) ? parsed.wishlist : [],
-      cart: Array.isArray(parsed.cart) ? parsed.cart : [],
-    };
-  } catch (error) {
-    console.error('Failed to read shop state', error);
-    return EMPTY_STATE;
-  }
-};
-
-const writeState = (key, state) => {
-  localStorage.setItem(key, JSON.stringify(state));
-};
 
 export const ShopProvider = ({ children }) => {
   const { user } = useAuth();
   const storageKey = useMemo(() => getStorageKey(user?.email), [user?.email]);
-
+  const hasMergedGuestState = useRef(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [stores, setStores] = useState(() => ({
-    [storageKey]: readState(storageKey),
+    [storageKey]: normalizeShopState(readState(storageKey)),
   }));
 
   const activeStore = stores[storageKey] || EMPTY_STATE;
   const wishlist = activeStore.wishlist;
   const cart = activeStore.cart;
 
+  const persistState = async (nextState) => {
+    if (user?.email) {
+      setIsSyncing(true);
+      try {
+        const response = await shopApi.updateState(nextState);
+        const normalized = normalizeShopState(response.data.data);
+        writeState(storageKey, normalized);
+        setStores((prev) => ({ ...prev, [storageKey]: normalized }));
+        return normalized;
+      } catch (error) {
+        console.error('Failed to sync shop state', error);
+        toast.error('Failed to sync your cart. Please try again.');
+        throw error;
+      } finally {
+        setIsSyncing(false);
+      }
+    }
+
+    writeState(storageKey, nextState);
+    setStores((prev) => ({ ...prev, [storageKey]: nextState }));
+    return nextState;
+  };
+
+  useEffect(() => {
+    let ignore = false;
+
+    const loadStore = async () => {
+      if (!user?.email) {
+        hasMergedGuestState.current = false;
+        const guestState = normalizeShopState(readState(storageKey));
+        setStores((prev) => ({ ...prev, [storageKey]: guestState }));
+        return;
+      }
+
+      setIsSyncing(true);
+      try {
+        const response = await shopApi.getState();
+        const remoteState = normalizeShopState(response.data.data);
+        const guestState = hasMergedGuestState.current
+          ? EMPTY_STATE
+          : normalizeShopState(readState(getStorageKey()));
+        const mergedState = mergeShopStates(remoteState, guestState);
+
+        if (ignore) return;
+
+        writeState(storageKey, mergedState);
+        setStores((prev) => ({ ...prev, [storageKey]: mergedState }));
+
+        if (JSON.stringify(mergedState) !== JSON.stringify(remoteState)) {
+          await shopApi.updateState(mergedState);
+        }
+
+        if (!hasMergedGuestState.current && (guestState.cart.length || guestState.wishlist.length)) {
+          writeState(getStorageKey(), EMPTY_STATE);
+        }
+
+        hasMergedGuestState.current = true;
+      } catch (error) {
+        console.error('Failed to fetch shop state', error);
+        if (!ignore) {
+          const fallback = normalizeShopState(readState(storageKey));
+          setStores((prev) => ({ ...prev, [storageKey]: fallback }));
+        }
+      } finally {
+        if (!ignore) {
+          setIsSyncing(false);
+        }
+      }
+    };
+
+    loadStore();
+
+    return () => {
+      ignore = true;
+    };
+  }, [storageKey, user?.email]);
+
   const updateStore = (updater) => {
-    setStores((prev) => {
-      const current = prev[storageKey] || readState(storageKey);
-      const next = updater(current);
-      writeState(storageKey, next);
-      return { ...prev, [storageKey]: next };
+    const current = activeStore || normalizeShopState(readState(storageKey));
+    const next = normalizeShopState(updater(current));
+    setStores((prev) => ({ ...prev, [storageKey]: next }));
+
+    persistState(next).catch(() => {
+      setStores((prev) => ({ ...prev, [storageKey]: current }));
     });
   };
 
@@ -67,7 +132,7 @@ export const ShopProvider = ({ children }) => {
     }
   };
 
-  const addToCart = (product) => {
+  const addToCart = (product, quantity = 1) => {
     const exists = cart.some((item) => item.id === product.id);
 
     updateStore((current) => {
@@ -78,7 +143,7 @@ export const ShopProvider = ({ children }) => {
           ...current,
           cart: current.cart.map((item) =>
             item.id === product.id
-              ? { ...item, quantity: item.quantity + 1 }
+              ? { ...item, quantity: item.quantity + quantity }
               : item
           ),
         };
@@ -86,7 +151,7 @@ export const ShopProvider = ({ children }) => {
 
       return {
         ...current,
-        cart: [...current.cart, { ...product, quantity: 1 }],
+        cart: [...current.cart, { ...product, quantity }],
       };
     });
 
@@ -142,6 +207,7 @@ export const ShopProvider = ({ children }) => {
         cartCount,
         wishlistCount,
         cartTotal,
+        isSyncing,
         isInWishlist,
         toggleWishlist,
         addToCart,

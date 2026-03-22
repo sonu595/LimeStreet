@@ -32,6 +32,14 @@ public class User {
     private String verificationToken;
     private String resetPasswordToken;
     private String refreshToken;
+
+    @Lob
+    @Column(name = "wishlist_data", columnDefinition = "TEXT")
+    private String wishlistData;
+
+    @Lob
+    @Column(name = "cart_data", columnDefinition = "TEXT")
+    private String cartData;
     
     @PrePersist
     protected void onCreate() {
