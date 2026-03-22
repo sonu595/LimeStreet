@@ -36,11 +36,22 @@ public class ProductController {
     
     @GetMapping("/category/{category}")
     public ResponseEntity<ApiResponse<List<ProductResponse>>> getProductsByCategory(@PathVariable String category) {
-        List<Product> products = productService.getProductsByCategory(category);
+        String mappedCategory = mapCategory(category);
+        List<Product> products = productService.getProductsByCategory(mappedCategory);
         List<ProductResponse> response = products.stream()
             .map(this::convertToResponse)
             .collect(Collectors.toList());
         return ResponseEntity.ok(new ApiResponse<>(true, "Products fetched successfully", response));
+    }
+
+    private String mapCategory(String category) {
+        return switch(category.toLowerCase()) {
+            case "tshirts" -> "COTTON_TSHIRT";
+            case "hoodies" -> "HOODIE";
+            case "jackets" -> "JACKET"; 
+            case "accessories" -> "ACCESSORIES";
+            default -> category.toUpperCase();
+        };
     }
     
     @GetMapping("/search")

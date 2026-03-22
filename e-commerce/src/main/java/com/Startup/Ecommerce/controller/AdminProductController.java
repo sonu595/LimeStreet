@@ -5,6 +5,7 @@ import com.Startup.Ecommerce.Service.ProductService;
 import com.Startup.Ecommerce.dto.request.ProductRequest;
 import com.Startup.Ecommerce.dto.response.ApiResponse;
 import com.Startup.Ecommerce.dto.response.ProductResponse;
+import com.Startup.Ecommerce.Enum.Category;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,18 +25,24 @@ public class AdminProductController {
     @PostMapping
     public ResponseEntity<ApiResponse<ProductResponse>> createProduct(@Valid @RequestBody ProductRequest request) {
         Product product = new Product();
+        
+        // Basic Info
         product.setName(request.getName());
         product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());
         product.setStock(request.getStock());
-        product.setCategory(request.getCategory());
-        product.setTshirtType(request.getTshirtType());
-        product.setDesignCategory(request.getDesignCategory());
+        product.setBrand(request.getBrand());
+        product.setImageUrl(request.getImageUrl());
+        
+        // ✅ Convert String to Enum for category fields
+        product.setCategory(convertToCategory(request.getCategory()));
+        product.setTshirtType(convertToCategory(request.getTshirtType()));
+        product.setDesignCategory(convertToCategory(request.getDesignCategory()));
+        
+        // Additional fields
         product.setFabric(request.getFabric());
         product.setSize(request.getSize());
         product.setColor(request.getColor());
-        product.setBrand(request.getBrand());
-        product.setImageUrl(request.getImageUrl());
 
         Product savedProduct = productService.createProduct(product);
         return ResponseEntity.ok(new ApiResponse<>(true, "Product created", convertToResponse(savedProduct)));
@@ -45,18 +52,23 @@ public class AdminProductController {
     public ResponseEntity<ApiResponse<ProductResponse>> updateProduct(@PathVariable Long id, @Valid @RequestBody ProductRequest request) {
         Product existing = productService.getProductById(id);
 
+        // Basic Info
         existing.setName(request.getName());
         existing.setDescription(request.getDescription());
         existing.setPrice(request.getPrice());
         existing.setStock(request.getStock());
-        existing.setCategory(request.getCategory());
-        existing.setTshirtType(request.getTshirtType());
-        existing.setDesignCategory(request.getDesignCategory());
+        existing.setBrand(request.getBrand());
+        existing.setImageUrl(request.getImageUrl());
+        
+        // ✅ Convert String to Enum for category fields
+        existing.setCategory(convertToCategory(request.getCategory()));
+        existing.setTshirtType(convertToCategory(request.getTshirtType()));
+        existing.setDesignCategory(convertToCategory(request.getDesignCategory()));
+        
+        // Additional fields
         existing.setFabric(request.getFabric());
         existing.setSize(request.getSize());
         existing.setColor(request.getColor());
-        existing.setBrand(request.getBrand());
-        existing.setImageUrl(request.getImageUrl());
 
         Product updated = productService.updateProduct(id, existing);
         return ResponseEntity.ok(new ApiResponse<>(true, "Product updated", convertToResponse(updated)));
@@ -66,6 +78,20 @@ public class AdminProductController {
     public ResponseEntity<ApiResponse<Void>> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Product deleted", null));
+    }
+
+    // ✅ Helper method to convert String to Category enum
+    private Category convertToCategory(String categoryStr) {
+        if (categoryStr == null || categoryStr.trim().isEmpty()) {
+            return null;
+        }
+        
+        try {
+            return Category.valueOf(categoryStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            System.err.println("Invalid category value: " + categoryStr);
+            return null;
+        }
     }
 
     private ProductResponse convertToResponse(Product product) {

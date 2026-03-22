@@ -27,8 +27,15 @@ public class JwtService {
     @Value("${jwt.refresh-expiration}")
     private Long refreshExpiration;
     
+    // In JwtService.java
     public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
+        Map<String, Object> claims = new HashMap<>();
+        // Extract role from UserDetails and add to claims
+        claims.put("role", userDetails.getAuthorities().stream()
+            .findFirst()
+            .map(auth -> auth.getAuthority().replace("ROLE_", ""))
+            .orElse("USER"));
+        return generateToken(claims, userDetails);
     }
     
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
@@ -81,5 +88,10 @@ public class JwtService {
     
     private Key getSignInKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());
+    }
+
+    public String extractRole(String token) {
+        final Claims claims = extractAllClaims(token);
+        return claims.get("role", String.class);
     }
 }

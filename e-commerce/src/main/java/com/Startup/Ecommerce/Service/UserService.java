@@ -56,7 +56,7 @@ public class UserService {
         user.setRefreshToken(refreshToken);
         userRepo.save(user);
 
-        return new LoginResponse(accessToken, refreshToken);
+        return new LoginResponse(accessToken, refreshToken, user.getRole(), user.getName());
     }
 
     public String register(RegisterRequest request){
@@ -115,7 +115,7 @@ public class UserService {
         user.setRefreshToken(newRefreshToken);
         userRepo.save(user);
 
-        return new LoginResponse(accessToken, newRefreshToken);
+        return new LoginResponse(accessToken, newRefreshToken, user.getRole(), user.getName());
     }
 
     public String forgotPassword(String email){

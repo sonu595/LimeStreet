@@ -1,6 +1,5 @@
 package com.Startup.Ecommerce.dto.request;
 
-import com.Startup.Ecommerce.Enum.Category;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -9,7 +8,7 @@ public class ProductRequest {
     @NotBlank(message = "Product name is required")
     private String name;
     
-    private String description;
+    private String description;  // ✅ ADD THIS
     
     @NotNull(message = "Price is required")
     @Positive(message = "Price must be positive")
@@ -19,14 +18,13 @@ public class ProductRequest {
     @Min(value = 0, message = "Stock cannot be negative")
     private Integer stock;
     
-    @NotNull(message = "Category is required")
-    private Category category;
+    private String category;        // ✅ ALREADY HAVE
+    private String tshirtType;      // ✅ ALREADY HAVE
+    private String designCategory;  // ✅ ALREADY HAVE
     
-    private Category tshirtType;
-    private Category designCategory;
-    private String fabric;
-    private String size;
-    private String color;
-    private String brand;
-    private String imageUrl;
+    private String fabric;          // ✅ ADD THIS
+    private String size;            // ✅ ADD THIS
+    private String color;           // ✅ ADD THIS
+    private String brand;           // ✅ ALREADY HAVE
+    private String imageUrl;        // ✅ ALREADY HAVE
 }

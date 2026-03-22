@@ -20,8 +20,12 @@ public enum Category {
     POLO_TSHIRT,
     OVERSIZED_TSHIRT,
     V_NECK_TSHIRT,
-    HOODIE,
     SWEATSHIRT,
+
+    // Add to Category.java
+    TSHIRTS,  // For frontend compatibility
+    HOODIES,
+    JACKETS,
     
     // Design Categories
     ANIME,
