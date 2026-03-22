@@ -2,22 +2,25 @@ import { Link } from 'react-router-dom';
 import { useProducts } from '../context/ProductContext';
 import ProductCard from '../components/products/ProductCard';
 import { useEffect } from 'react';
+import { motion } from 'framer-motion';
 import Navbar from '../components/layout/Navbar';
+import { useAuth } from '../context/AuthContext';
+import { useShop } from '../context/ShopContext';
 
 const Home = () => {
   const { newArrivals, bestSellers, fetchNewArrivals, fetchBestSellers } = useProducts();
+  const { user, isAdmin } = useAuth();
+  const { cartCount, wishlistCount } = useShop();
 
-  // Load products when page opens
   useEffect(() => {
-    fetchNewArrivals();  // Get new products
-    fetchBestSellers();  // Get popular products
+    fetchNewArrivals();
+    fetchBestSellers();
   }, []);
 
   return (
     <div className="bg-white">
       <Navbar />
 
-      {/* Hero Section - Main Banner */}
       <section className="relative h-screen flex items-center justify-center">
         <div className="absolute inset-0">
           <img
@@ -25,51 +28,74 @@ const Home = () => {
             alt="hero"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute inset-0 bg-black/45" />
         </div>
 
-        <div className="relative z-10 text-center text-white px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+          className="relative z-10 text-center text-white px-4"
+        >
           <h1 className="text-5xl md:text-6xl mb-4">Wear Your Story</h1>
           <p className="mb-8">Custom printed t-shirts for you</p>
           <Link to="/products">
-            <button className="px-8 py-3 bg-white text-black rounded-full">
+            <button className="px-8 py-3 bg-white text-black rounded-full hover:scale-105 transition-transform">
               Shop Now
             </button>
           </Link>
+        </motion.div>
+      </section>
+
+      <section className="py-10 px-4 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="rounded-3xl bg-gradient-to-r from-slate-900 to-slate-700 text-white p-6 md:p-8 shadow-xl"
+          >
+            <p className="text-sm text-white/70">Member Card</p>
+            <h3 className="text-2xl font-semibold mt-1">{user ? `Welcome back, ${user.name || user.email}` : 'Welcome, Guest'}</h3>
+            <p className="text-white/80 mt-2">
+              {isAdmin ? 'Admin access enabled.' : 'Track your favorites and cart items instantly.'}
+            </p>
+            <div className="mt-5 flex gap-3 flex-wrap">
+              <span className="px-4 py-2 rounded-full bg-white/10 border border-white/20">Wishlist: {wishlistCount}</span>
+              <span className="px-4 py-2 rounded-full bg-white/10 border border-white/20">Cart Items: {cartCount}</span>
+              <span className="px-4 py-2 rounded-full bg-white/10 border border-white/20">
+                Status: {user ? (isAdmin ? 'Admin' : 'Member') : 'Guest'}
+              </span>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* New Arrivals Section */}
       <section className="py-16 px-4">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl text-center mb-10">New Arrivals</h2>
-          
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {newArrivals.slice(0, 4).map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {newArrivals.slice(0, 4).map((product, index) => (
+              <ProductCard key={product.id} product={product} index={index} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Best Sellers Section */}
       <section className="py-16 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl text-center mb-10">Best Sellers</h2>
-          
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {bestSellers.slice(0, 4).map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {bestSellers.slice(0, 4).map((product, index) => (
+              <ProductCard key={product.id} product={product} index={index} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Categories Section */}
       <section className="py-16 px-4">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl text-center mb-10">Shop by Category</h2>
-          
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Link to="/products?category=tshirts">
               <div className="bg-gray-200 h-32 flex items-center justify-center rounded-lg hover:bg-gray-300 transition">
@@ -91,25 +117,6 @@ const Home = () => {
                 Accessories
               </div>
             </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Newsletter Section */}
-      <section className="py-16 px-4 bg-black text-white">
-        <div className="max-w-xl mx-auto text-center">
-          <h2 className="text-2xl mb-4">Subscribe to Our Newsletter</h2>
-          <p className="mb-6">Get updates about new products and offers</p>
-          
-          <div className="flex gap-4">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="flex-1 px-4 py-2 text-black rounded"
-            />
-            <button className="px-6 py-2 bg-white text-black rounded hover:bg-gray-200 transition">
-              Subscribe
-            </button>
           </div>
         </div>
       </section>
