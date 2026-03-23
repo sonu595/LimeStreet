@@ -1,21 +1,20 @@
-// context/AuthContext.jsx
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
-// Create the context
-const AuthContext = createContext(null);
+export const AuthContext = createContext(null);
 
-// Custom hook to use the auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
+
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
+
   return context;
 };
 
-// Provider component
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
@@ -23,12 +22,10 @@ export const AuthProvider = ({ children }) => {
   const [otpSent, setOtpSent] = useState(false);
   const [tempEmail, setTempEmail] = useState('');
 
-  // Axios instance with auth header
   const axiosInstance = axios.create({
     baseURL: 'http://localhost:8080/api',
   });
 
-  // Add token to requests if it exists
   axiosInstance.interceptors.request.use(
     (config) => {
       if (token) {
@@ -41,24 +38,53 @@ export const AuthProvider = ({ children }) => {
     }
   );
 
-  // Check token validity on mount
+  const clearAuthState = () => {
+    localStorage.removeItem('token');
+    setToken(null);
+    setUser(null);
+    setOtpSent(false);
+    setTempEmail('');
+  };
+
+  const getUserFromStoredToken = (storedToken) => {
+    try {
+      const decoded = jwtDecode(storedToken);
+
+      if (decoded.exp && decoded.exp * 1000 < Date.now()) {
+        return null;
+      }
+
+      return {
+        email: decoded.sub || decoded.email || '',
+        name: decoded.name || '',
+        id: decoded.id,
+      };
+    } catch (jwtError) {
+      try {
+        const decoded = JSON.parse(atob(storedToken));
+
+        return {
+          email: decoded.email || '',
+          name: decoded.name || '',
+          id: decoded.id,
+        };
+      } catch (parseError) {
+        console.error('Invalid token:', jwtError);
+        console.error('Token parse fallback failed:', parseError);
+        return null;
+      }
+    }
+  };
+
   useEffect(() => {
     const initAuth = () => {
       if (token) {
-        try {
-          const decoded = jwtDecode(token);
-          // Check if token is expired
-          if (decoded.exp * 1000 < Date.now()) {
-            logout();
-          } else {
-            setUser({
-              email: decoded.sub,
-              name: decoded.name,
-            });
-          }
-        } catch (error) {
-          console.error('Invalid token:', error);
-          logout();
+        const parsedUser = getUserFromStoredToken(token);
+
+        if (parsedUser) {
+          setUser(parsedUser);
+        } else {
+          clearAuthState();
         }
       }
       setLoading(false);
@@ -67,7 +93,6 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, [token]);
 
-  // Send OTP for registration/login
   const sendOtp = async (email) => {
     try {
       const response = await axios.post('http://localhost:8080/api/auth/send-otp', {
@@ -88,7 +113,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Verify OTP and register/login
   const verifyAndRegister = async (email, otp, name = null) => {
     try {
       const response = await axios.post('http://localhost:8080/api/auth/verify-register', {
@@ -113,7 +137,7 @@ export const AuthProvider = ({ children }) => {
       return {
         success: true,
         message: message,
-        isNewUser: !name
+        isNewUser: Boolean(name)
       };
     } catch (error) {
       console.error('Verify OTP error:', error);
@@ -121,7 +145,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Direct login for existing users
   const verifyLogin = async (email, otp) => {
     try {
       const response = await axios.post('http://localhost:8080/api/auth/verify-login', {
@@ -151,7 +174,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Traditional email/password login
   const login = async (credentials) => {
     try {
       const response = await axios.post('http://localhost:8080/api/users/login', {
@@ -160,11 +182,13 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (response.data === "Login successful") {
-        // Get user details
         const userResponse = await axios.get(`http://localhost:8080/api/users?email=${credentials.email}`);
         const userData = userResponse.data.find(u => u.email === credentials.email);
-        
-        // Create a simple token (in production, your backend should return a real JWT)
+
+        if (!userData) {
+          throw new Error('User details not found');
+        }
+
         const mockToken = btoa(JSON.stringify({ 
           email: userData.email, 
           name: userData.name,
@@ -181,13 +205,14 @@ export const AuthProvider = ({ children }) => {
 
         return { success: true };
       }
+
+      throw new Error('Login failed');
     } catch (error) {
       console.error('Login error:', error);
-      throw new Error(error.response?.data?.message || 'Login failed');
+      throw new Error(error.response?.data?.message || error.message || 'Login failed');
     }
   };
 
-  // Register with email/password
   const register = async (userData) => {
     try {
       const response = await axios.post('http://localhost:8080/api/users/register', {
@@ -207,16 +232,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Logout
   const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
-    setOtpSent(false);
-    setTempEmail('');
+    clearAuthState();
   };
 
-  // Check OTP status
   const checkOtpStatus = async (email) => {
     try {
       const response = await axios.get(`http://localhost:8080/api/auth/otp-status/${email}`);
@@ -251,5 +270,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Default export for the provider
 export default AuthProvider;

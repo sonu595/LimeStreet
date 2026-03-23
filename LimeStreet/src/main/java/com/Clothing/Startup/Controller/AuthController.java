@@ -1,12 +1,13 @@
 package com.Clothing.Startup.Controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
 import com.Clothing.Startup.Dto.AuthResponse;
 import com.Clothing.Startup.Model.User;
 import com.Clothing.Startup.Repository.UserRepository;
 import com.Clothing.Startup.Service.EmailService;
 import com.Clothing.Startup.Util.JwtUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

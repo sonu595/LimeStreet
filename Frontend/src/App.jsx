@@ -1,17 +1,16 @@
-// App.jsx
-import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
+import React from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import useAuth from './context/useAuth';
 import Nav from './Component/Navbar/Nav';
 import Home from './pages/Home/Home';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import Cart from './pages/Cart/Cart';
+import WishList from './pages/WishList/WishList';
 import ProfilePage from './pages/Profile/ProfilePage';
 import Arrivel from './pages/New/Arrivel';
 import Sale from './pages/Sale/Sale';
 
-// Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
@@ -33,7 +32,6 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// Public Route Component (redirects to home if already logged in)
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
@@ -56,118 +54,104 @@ const PublicRoute = ({ children }) => {
 };
 
 function App() {
-  const [isLogin, setIsLogin] = useState(true);
-
-  const toggleAuthMode = () => {
-    setIsLogin(!isLogin);
-  };
-
-  const handleLoginSuccess = () => {
-    // This will be called after successful login
-    console.log('Login successful!');
-  };
+  const navigate = useNavigate();
 
   return (
-    
-      <div className="App">
-        <Routes>
-          {/* Public Routes - No Navbar */}
-          <Route
-            path="/login"
-            element={
-              <PublicRoute>
-                {isLogin ? (
-                  <Login onToggle={toggleAuthMode} onLoginSuccess={handleLoginSuccess} />
-                ) : (
-                  <Register onToggle={toggleAuthMode} />
-                )}
-              </PublicRoute>
-            }
-          />
-          
-          <Route
-            path="/register"
-            element={
-              <PublicRoute>
-                <Register onToggle={() => setIsLogin(true)} />
-              </PublicRoute>
-            }
-          />
+    <div className="App">
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login onToggle={() => navigate('/register')} />
+            </PublicRoute>
+          }
+        />
+        
+        <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <Register onToggle={() => navigate('/login')} />
+            </PublicRoute>
+          }
+        />
 
-          {/* Protected Routes - With Navbar */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <>
-                  <Nav />
-                  <Home />
-                </>
-              </ProtectedRoute>
-            }
-          />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <>
+                <Nav />
+                <Home />
+              </>
+            </ProtectedRoute>
+          }
+        />
 
-          <Route
-            path="/arrivel"
-            element={
-              <ProtectedRoute>
-                <>
-                  <Nav />
-                  <Arrivel />
-                </>
-              </ProtectedRoute>
-            }
-          />
+        <Route
+          path="/arrivel"
+          element={
+            <ProtectedRoute>
+              <>
+                <Nav />
+                <Arrivel />
+              </>
+            </ProtectedRoute>
+          }
+        />
 
-          <Route
-            path="/sale"
-            element={
-              <ProtectedRoute>
-                <>
-                  <Nav />
-                  <Sale />
-                </>
-              </ProtectedRoute>
-            }
-          />
+        <Route
+          path="/sale"
+          element={
+            <ProtectedRoute>
+              <>
+                <Nav />
+                <Sale />
+              </>
+            </ProtectedRoute>
+          }
+        />
 
-          <Route
-            path="/cart"
-            element={
-              <ProtectedRoute>
-                <>
-                  <Nav />
-                  <Cart />
-                </>
-              </ProtectedRoute>
-            }
-          />
+        <Route
+          path="/cart"
+          element={
+            <ProtectedRoute>
+              <>
+                <Nav />
+                <Cart />
+              </>
+            </ProtectedRoute>
+          }
+        />
 
-          <Route
-            path="/wishlist"
-            element={
-              <ProtectedRoute>
-                  <Nav />
-              </ProtectedRoute>
-            }
-          />
+        <Route
+          path="/wishlist"
+          element={
+            <ProtectedRoute>
+              <>
+                <Nav />
+                <WishList />
+              </>
+            </ProtectedRoute>
+          }
+        />
 
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <>
-                  <Nav />
-                  <ProfilePage />
-                </>
-              </ProtectedRoute>
-            }
-          />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <>
+                <Nav />
+                <ProfilePage />
+              </>
+            </ProtectedRoute>
+          }
+        />
 
-          {/* Catch all - redirect to login if not authenticated, else home */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </div>
   );
 }
 
