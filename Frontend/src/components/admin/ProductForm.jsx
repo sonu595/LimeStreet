@@ -1,6 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const toArray = (value, fallback = []) => {
+  if (Array.isArray(value)) return value;
+  if (typeof value !== 'string' || !value.trim()) return fallback;
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
+
 const ProductForm = ({ product = {}, onSubmit }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -16,8 +25,8 @@ const ProductForm = ({ product = {}, onSubmit }) => {
     tshirtType: product.tshirtType || 'COTTON_TSHIRT',
     designCategory: product.designCategory || 'ANIME',
     fabric: product.fabric || 'Cotton',
-    size: product.size || 'M',
-    color: product.color || 'Black',
+    size: toArray(product.size, ['M']),
+    color: toArray(product.color, ['Black']),
     brand: product.brand || '',
     imageBase64: '',        // Base64 string for new image
     imageUrl: product.imageUrl || ''  // Existing URL
@@ -31,6 +40,20 @@ const ProductForm = ({ product = {}, onSubmit }) => {
   const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
   const fabrics = ['Cotton', 'Polyester', 'Linen', 'Wool', 'Silk', 'Blend'];
   const colors = ['Black', 'White', 'Red', 'Blue', 'Green', 'Yellow', 'Gray', 'Navy', 'Brown'];
+
+  const toggleMultiValue = (field, value) => {
+    setForm((prev) => {
+      const currentValues = prev[field] || [];
+      const hasValue = currentValues.includes(value);
+
+      return {
+        ...prev,
+        [field]: hasValue
+          ? currentValues.filter((item) => item !== value)
+          : [...currentValues, value]
+      };
+    });
+  };
 
   // ✅ Convert File to Base64
   const fileToBase64 = (file) => {
@@ -89,6 +112,8 @@ const ProductForm = ({ product = {}, onSubmit }) => {
     if (!form.stock || form.stock < 0) newErrors.stock = 'Valid stock is required';
     if (!form.brand.trim()) newErrors.brand = 'Brand is required';
     if (!form.imageBase64 && !form.imageUrl) newErrors.image = 'Product image is required';
+    if (!form.size.length) newErrors.size = 'At least one size is required';
+    if (!form.color.length) newErrors.color = 'At least one color is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -112,8 +137,8 @@ const ProductForm = ({ product = {}, onSubmit }) => {
         tshirtType: form.tshirtType,
         designCategory: form.designCategory,
         fabric: form.fabric,
-        size: form.size,
-        color: form.color,
+        size: form.size.join(', '),
+        color: form.color.join(', '),
         brand: form.brand,
         // Send Base64 if new image, otherwise send existing URL
         imageBase64: form.imageBase64,
@@ -281,32 +306,42 @@ const ProductForm = ({ product = {}, onSubmit }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Size
+              Size *
             </label>
-            <select
-              value={form.size}
-              onChange={(e) => setForm({...form, size: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg"
-            >
-              {sizes.map(s => (
-                <option key={s} value={s}>{s}</option>
+            <div className={`grid grid-cols-3 gap-2 p-3 border rounded-lg ${errors.size ? 'border-red-500' : 'border-gray-300'}`}>
+              {sizes.map((sizeValue) => (
+                <label key={sizeValue} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.size.includes(sizeValue)}
+                    onChange={() => toggleMultiValue('size', sizeValue)}
+                    className="accent-black"
+                  />
+                  {sizeValue}
+                </label>
               ))}
-            </select>
+            </div>
+            {errors.size && <p className="text-red-500 text-sm mt-1">{errors.size}</p>}
           </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Color
+              Color *
             </label>
-            <select
-              value={form.color}
-              onChange={(e) => setForm({...form, color: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg"
-            >
-              {colors.map(c => (
-                <option key={c} value={c}>{c}</option>
+            <div className={`grid grid-cols-2 gap-2 p-3 border rounded-lg ${errors.color ? 'border-red-500' : 'border-gray-300'}`}>
+              {colors.map((colorValue) => (
+                <label key={colorValue} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.color.includes(colorValue)}
+                    onChange={() => toggleMultiValue('color', colorValue)}
+                    className="accent-black"
+                  />
+                  {colorValue}
+                </label>
               ))}
-            </select>
+            </div>
+            {errors.color && <p className="text-red-500 text-sm mt-1">{errors.color}</p>}
           </div>
         </div>
 

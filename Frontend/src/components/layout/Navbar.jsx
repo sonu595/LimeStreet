@@ -18,6 +18,7 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isHomePage = location.pathname === '/';
+  const showShopLinks = !isAdmin;
   const useLightText = isHomePage && !isScrolled && !isMobileMenuOpen;
   const navClasses = useLightText
     ? 'bg-transparent text-white'
@@ -57,12 +58,16 @@ const Navbar = () => {
             <Link to="/products" className={`relative group transition-colors duration-300 ${linkClasses}`}>
               Products
             </Link>
-            <Link to="/wishlist" className={`relative transition-colors duration-300 inline-flex items-center ${linkClasses}`}>
-              Wishlist {wishlistCount > 0 && <CountBadge count={wishlistCount} />}
-            </Link>
-            <Link to="/cart" className={`relative transition-colors duration-300 inline-flex items-center ${linkClasses}`}>
-              Cart {cartCount > 0 && <CountBadge count={cartCount} />}
-            </Link>
+            {showShopLinks && (
+              <>
+                <Link to="/wishlist" className={`relative transition-colors duration-300 inline-flex items-center ${linkClasses}`}>
+                  Wishlist {wishlistCount > 0 && <CountBadge count={wishlistCount} />}
+                </Link>
+                <Link to="/cart" className={`relative transition-colors duration-300 inline-flex items-center ${linkClasses}`}>
+                  Cart {cartCount > 0 && <CountBadge count={cartCount} />}
+                </Link>
+              </>
+            )}
 
             {user ? (
               <>
@@ -127,12 +132,16 @@ const Navbar = () => {
             <Link to="/products" onClick={() => setIsMobileMenuOpen(false)} className="block transition-colors duration-300 text-slate-700 hover:text-slate-950">
               Products
             </Link>
-            <Link to="/wishlist" onClick={() => setIsMobileMenuOpen(false)} className="block transition-colors duration-300 text-slate-700 hover:text-slate-950">
-              Wishlist ({wishlistCount})
-            </Link>
-            <Link to="/cart" onClick={() => setIsMobileMenuOpen(false)} className="block transition-colors duration-300 text-slate-700 hover:text-slate-950">
-              Cart ({cartCount})
-            </Link>
+            {showShopLinks && (
+              <>
+                <Link to="/wishlist" onClick={() => setIsMobileMenuOpen(false)} className="block transition-colors duration-300 text-slate-700 hover:text-slate-950">
+                  Wishlist ({wishlistCount})
+                </Link>
+                <Link to="/cart" onClick={() => setIsMobileMenuOpen(false)} className="block transition-colors duration-300 text-slate-700 hover:text-slate-950">
+                  Cart ({cartCount})
+                </Link>
+              </>
+            )}
 
             {user ? (
               <>

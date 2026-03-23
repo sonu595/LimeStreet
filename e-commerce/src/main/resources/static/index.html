@@ -31,6 +31,11 @@
             min-height: 550px;
         }
 
+        .container.dashboard-mode {
+            max-width: 920px;
+            min-height: 620px;
+        }
+
         h2 {
             color: #333;
             margin-bottom: 30px;
@@ -139,11 +144,34 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
+            margin-bottom: 18px;
+            gap: 16px;
         }
 
         .dashboard-header h2 {
             margin-bottom: 0;
+        }
+
+        .dashboard-subtitle {
+            color: #666;
+            margin-top: 4px;
+            font-size: 14px;
+        }
+
+        .top-nav {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-item {
+            padding: 10px 16px;
+            border-radius: 999px;
+            background: #f1f3ff;
+            color: #4f46e5;
+            font-size: 13px;
+            font-weight: 600;
         }
 
         .logout-btn {
@@ -206,6 +234,22 @@
         .back-link {
             text-align: center;
             margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .container.dashboard-mode {
+                max-width: 95%;
+                padding: 24px;
+            }
+
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -324,13 +368,25 @@
         <!-- Dashboard Page -->
         <div id="dashboardPage" class="page">
             <div class="dashboard-header">
-                <h2>📊 Dashboard</h2>
+                <div>
+                    <h2 id="dashboardTitle">📊 Dashboard</h2>
+                    <p class="dashboard-subtitle" id="dashboardSubtitle">Track your account activity</p>
+                </div>
                 <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+
+            <div class="top-nav">
+                <span class="nav-item">Dashboard</span>
+                <span class="nav-item">Orders</span>
+                <span class="nav-item" id="wishlistNav">Wishlist</span>
+                <span class="nav-item" id="cartNav">Cart</span>
+                <span class="nav-item">Reviews</span>
             </div>
             
             <div class="user-info" id="userInfo">
                 <p><strong>Name:</strong> <span id="userName">-</span></p>
                 <p><strong>Email:</strong> <span id="userEmail">-</span></p>
+                <p><strong>Role:</strong> <span id="userRole">-</span></p>
                 <p><strong>Status:</strong> <span id="userStatus">-</span></p>
             </div>
 
@@ -339,11 +395,11 @@
                     <h3>Total Orders</h3>
                     <p>0</p>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card" id="wishlistCard">
                     <h3>Wishlist</h3>
                     <p>0</p>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card" id="cartCard">
                     <h3>Cart Items</h3>
                     <p>0</p>
                 </div>
@@ -378,6 +434,23 @@
         function showPage(page) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(page + 'Page').classList.add('active');
+            document.querySelector('.container').classList.toggle('dashboard-mode', page === 'dashboard');
+        }
+
+        function updateDashboardByRole() {
+            const isAdmin = currentUser?.role === 'ADMIN';
+            document.getElementById('dashboardTitle').textContent = isAdmin ? '🛠️ Admin Panel' : '📊 Dashboard';
+            document.getElementById('dashboardSubtitle').textContent = isAdmin
+                ? 'Manage platform from a cleaner admin layout'
+                : 'Track your account activity';
+
+            const hiddenForAdmin = ['wishlistCard', 'cartCard', 'wishlistNav', 'cartNav'];
+            hiddenForAdmin.forEach((id) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.style.display = isAdmin ? 'none' : '';
+                }
+            });
         }
 
         // API Call
@@ -472,13 +545,16 @@
                     currentUser = {
                         email: data.email,
                         name: data.email.split('@')[0],
+                        role: result.data.role || (data.email.toLowerCase().includes('admin') ? 'ADMIN' : 'USER'),
                         status: 'ACTIVE'
                     };
                     
                     // Update dashboard
                     document.getElementById('userName').textContent = currentUser.name;
                     document.getElementById('userEmail').textContent = currentUser.email;
+                    document.getElementById('userRole').textContent = currentUser.role;
                     document.getElementById('userStatus').textContent = 'Active';
+                    updateDashboardByRole();
                     
                     showMessage('Login successful!', 'success');
                     showPage('dashboard');
