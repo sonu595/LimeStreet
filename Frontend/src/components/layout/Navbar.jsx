@@ -2,9 +2,10 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useState, useEffect } from 'react';
 import { useShop } from '../../context/ShopContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const CountBadge = ({ count }) => (
-  <span className="ml-1 min-w-5 h-5 px-1 rounded-full bg-emerald-500 text-white text-[10px] inline-flex items-center justify-center">
+  <span className="ml-1 min-w-5 h-5 px-1 rounded-full bg-fuchsia-500 text-white text-[10px] inline-flex items-center justify-center">
     {count}
   </span>
 );
@@ -19,17 +20,13 @@ const Navbar = () => {
 
   const isHomePage = location.pathname === '/';
   const showShopLinks = !isAdmin;
-  const useLightText = isHomePage && !isScrolled && !isMobileMenuOpen;
-  const navClasses = useLightText
-    ? 'bg-transparent text-white'
-    : 'bg-white/95 text-slate-900 shadow-lg backdrop-blur-md border-b border-slate-200/80';
-  const linkClasses = useLightText
-    ? 'text-white/90 hover:text-white'
-    : 'text-slate-600 hover:text-slate-950';
+  const navClasses = isHomePage && !isScrolled
+    ? 'bg-slate-950/45 border-white/10 text-white'
+    : 'bg-slate-950/88 border-white/10 text-white shadow-xl shadow-black/30';
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      setIsScrolled(window.scrollY > 22);
     };
 
     setIsMobileMenuOpen(false);
@@ -42,28 +39,30 @@ const Navbar = () => {
     navigate('/');
   };
 
+  const mobileItemClass = 'block text-sm text-slate-100 hover:text-white transition-colors';
+
   return (
-    <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${navClasses}`}>
+    <nav className={`fixed top-0 w-full z-50 transition-all duration-500 border-b backdrop-blur-xl ${navClasses}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 md:h-20">
           <Link
             to="/"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="text-xl sm:text-2xl font-semibold tracking-[0.22em] transition-all duration-300 hover:scale-[1.02]"
+            className="text-xl sm:text-2xl font-semibold tracking-[0.24em] text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-300 via-sky-200 to-emerald-200"
           >
             LIME STREET
           </Link>
 
-          <div className="hidden md:flex items-center space-x-7">
-            <Link to="/products" className={`relative group transition-colors duration-300 ${linkClasses}`}>
+          <div className="hidden md:flex items-center space-x-6 text-sm">
+            <Link to="/products" className="text-slate-200 hover:text-white transition-colors">
               Products
             </Link>
             {showShopLinks && (
               <>
-                <Link to="/wishlist" className={`relative transition-colors duration-300 inline-flex items-center ${linkClasses}`}>
+                <Link to="/wishlist" className="text-slate-200 hover:text-white inline-flex items-center transition-colors">
                   Wishlist {wishlistCount > 0 && <CountBadge count={wishlistCount} />}
                 </Link>
-                <Link to="/cart" className={`relative transition-colors duration-300 inline-flex items-center ${linkClasses}`}>
+                <Link to="/cart" className="text-slate-200 hover:text-white inline-flex items-center transition-colors">
                   Cart {cartCount > 0 && <CountBadge count={cartCount} />}
                 </Link>
               </>
@@ -72,15 +71,15 @@ const Navbar = () => {
             {user ? (
               <>
                 {isAdmin && (
-                  <Link to="/admin" className={`relative group transition-colors duration-300 ${linkClasses}`}>
+                  <Link to="/admin" className="text-slate-200 hover:text-white transition-colors">
                     Admin Panel
                   </Link>
                 )}
 
-                <span className={`text-sm flex items-center gap-2 ${useLightText ? 'text-white/80' : 'text-slate-600'}`}>
+                <span className="text-slate-300 text-xs">
                   Hi, {user.name || user.email?.split('@')[0]}
                   {isAdmin && (
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${useLightText ? 'bg-white text-black' : 'bg-slate-900 text-white'}`}>
+                    <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-white/15 border border-white/20 text-slate-100">
                       Admin
                     </span>
                   )}
@@ -88,27 +87,19 @@ const Navbar = () => {
 
                 <button
                   onClick={handleLogout}
-                  className={`px-4 py-2 rounded-full border transition-all duration-300 hover:scale-105 ${
-                    useLightText
-                      ? 'border-white/30 text-white hover:bg-white hover:text-black'
-                      : 'border-slate-300 text-slate-700 hover:bg-slate-900 hover:text-white hover:border-slate-900'
-                  }`}
+                  className="px-4 py-2 rounded-full border border-white/20 bg-white/5 text-white hover:bg-white/10 transition"
                 >
                   Logout
                 </button>
               </>
             ) : (
-              <div className="flex items-center space-x-4">
-                <Link to="/login" className={`px-4 py-2 transition-all duration-300 hover:scale-105 ${linkClasses}`}>
+              <div className="flex items-center space-x-3">
+                <Link to="/login" className="px-3 py-2 text-slate-200 hover:text-white transition-colors">
                   Login
                 </Link>
                 <Link
                   to="/register"
-                  className={`px-4 py-2 rounded-full border transition-all duration-300 hover:scale-105 ${
-                    useLightText
-                      ? 'border-white/30 text-white hover:bg-white hover:text-black'
-                      : 'border-slate-300 text-slate-700 hover:bg-slate-900 hover:text-white hover:border-slate-900'
-                  }`}
+                  className="px-4 py-2 rounded-full border border-white/25 bg-white/5 text-white hover:bg-white/10 transition"
                 >
                   Register
                 </Link>
@@ -121,67 +112,78 @@ const Navbar = () => {
             className="md:hidden relative w-10 h-10 focus:outline-none"
             aria-label="Toggle menu"
           >
-            <span className={`absolute block h-0.5 w-6 transform transition-all duration-300 ${useLightText ? 'bg-white' : 'bg-slate-900'} ${isMobileMenuOpen ? 'rotate-45 top-5' : 'top-3'}`}></span>
-            <span className={`absolute block h-0.5 w-6 transform transition-all duration-300 ${useLightText ? 'bg-white' : 'bg-slate-900'} ${isMobileMenuOpen ? 'opacity-0' : 'top-5'}`}></span>
-            <span className={`absolute block h-0.5 w-6 transform transition-all duration-300 ${useLightText ? 'bg-white' : 'bg-slate-900'} ${isMobileMenuOpen ? '-rotate-45 top-5' : 'top-7'}`}></span>
+            <span className={`absolute block h-0.5 w-6 transform transition-all duration-300 bg-white ${isMobileMenuOpen ? 'rotate-45 top-5' : 'top-3'}`}></span>
+            <span className={`absolute block h-0.5 w-6 transform transition-all duration-300 bg-white ${isMobileMenuOpen ? 'opacity-0' : 'top-5'}`}></span>
+            <span className={`absolute block h-0.5 w-6 transform transition-all duration-300 bg-white ${isMobileMenuOpen ? '-rotate-45 top-5' : 'top-7'}`}></span>
           </button>
         </div>
 
-        <div className={`md:hidden overflow-hidden transition-all duration-500 ${isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
-          <div className="py-4 space-y-4 rounded-3xl bg-white text-slate-900 mb-4 p-5 shadow-xl border border-slate-200">
-            <Link to="/products" onClick={() => setIsMobileMenuOpen(false)} className="block transition-colors duration-300 text-slate-700 hover:text-slate-950">
-              Products
-            </Link>
-            {showShopLinks && (
-              <>
-                <Link to="/wishlist" onClick={() => setIsMobileMenuOpen(false)} className="block transition-colors duration-300 text-slate-700 hover:text-slate-950">
-                  Wishlist ({wishlistCount})
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="md:hidden pb-4"
+            >
+              <div className="rounded-3xl border border-white/15 bg-slate-900/95 p-5 space-y-4">
+                <Link to="/products" onClick={() => setIsMobileMenuOpen(false)} className={mobileItemClass}>
+                  Products
                 </Link>
-                <Link to="/cart" onClick={() => setIsMobileMenuOpen(false)} className="block transition-colors duration-300 text-slate-700 hover:text-slate-950">
-                  Cart ({cartCount})
-                </Link>
-              </>
-            )}
 
-            {user ? (
-              <>
-                {isAdmin && (
-                  <Link to="/admin" onClick={() => setIsMobileMenuOpen(false)} className="block transition-colors duration-300 text-slate-700 hover:text-slate-950">
-                    Admin Panel
-                  </Link>
+                {showShopLinks && (
+                  <>
+                    <Link to="/wishlist" onClick={() => setIsMobileMenuOpen(false)} className={mobileItemClass}>
+                      Wishlist ({wishlistCount})
+                    </Link>
+                    <Link to="/cart" onClick={() => setIsMobileMenuOpen(false)} className={mobileItemClass}>
+                      Cart ({cartCount})
+                    </Link>
+                  </>
                 )}
 
-                <span className="block text-sm text-slate-500">
-                  Hi, {user.name || user.email?.split('@')[0]}
-                  {isAdmin && ' (Admin)'}
-                </span>
+                {user ? (
+                  <>
+                    {isAdmin && (
+                      <Link to="/admin" onClick={() => setIsMobileMenuOpen(false)} className={mobileItemClass}>
+                        Admin Panel
+                      </Link>
+                    )}
 
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="block w-full text-left px-4 py-2 rounded-full border border-slate-300 text-slate-700 transition-all duration-300 hover:bg-slate-900 hover:text-white"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="block transition-colors duration-300 text-slate-700 hover:text-slate-950">
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block px-4 py-2 rounded-full border border-slate-300 text-slate-700 transition-all duration-300 hover:bg-slate-900 hover:text-white"
-                >
-                  Register
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
+                    <span className="block text-xs text-slate-400">
+                      Hi, {user.name || user.email?.split('@')[0]}
+                      {isAdmin && ' (Admin)'}
+                    </span>
+
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 rounded-full border border-white/20 bg-white/5 text-white hover:bg-white/10 transition"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className={mobileItemClass}>
+                      Login
+                    </Link>
+                    <Link
+                      to="/register"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block px-4 py-2 rounded-full border border-white/20 bg-white/5 text-white hover:bg-white/10 transition"
+                    >
+                      Register
+                    </Link>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </nav>
   );
