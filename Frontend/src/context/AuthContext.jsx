@@ -93,10 +93,11 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, [token]);
 
-  const sendOtp = async (email) => {
+  const sendOtp = async (email, purpose = 'login') => {
     try {
       const response = await axios.post('http://localhost:8080/api/auth/send-otp', {
-        email: email
+        email: email,
+        purpose: purpose
       });
       
       setTempEmail(email);

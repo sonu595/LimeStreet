@@ -25,7 +25,7 @@ const Login = ({ onToggle }) => {
     setError('');
     
     try {
-      await sendOtp(email);
+      await sendOtp(email, 'login');
       setStep(2);
     } catch (err) {
       setError(err.message || 'Failed to send OTP');
@@ -57,12 +57,21 @@ const Login = ({ onToggle }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-6xl bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div className="flex flex-col md:flex-row">
+    <div className="min-h-screen bg-gray-50 px-4 py-6 md:flex md:items-center md:justify-center">
+      <div className="relative w-full max-w-6xl overflow-hidden rounded-2xl bg-white shadow-xl md:h-[calc(100dvh-3rem)] md:max-h-[760px]">
+        <div className="absolute inset-0 md:hidden">
+          <img
+            src="https://images.unsplash.com/photo-1445205170230-053b83016050?w=800&h=1200&fit=crop"
+            alt="Fashion"
+            className="h-full w-full object-cover opacity-20"
+          />
+          <div className="absolute inset-0 bg-white/35" />
+        </div>
+
+        <div className="relative z-10 flex flex-col md:h-full md:flex-row">
           
           {/* Left Side - Image */}
-          <div className="hidden md:block md:w-1/2 relative">
+          <div className="hidden md:block md:h-full md:w-1/2 relative">
             <img 
               src="https://images.unsplash.com/photo-1445205170230-053b83016050?w=800&h=1200&fit=crop"
               alt="Fashion"
@@ -75,8 +84,8 @@ const Login = ({ onToggle }) => {
           </div>
 
           {/* Right Side - Form */}
-          <div className="w-full md:w-1/2 p-8 md:p-12">
-            <div className="max-w-md mx-auto">
+          <div className="w-full bg-white/88 p-8 backdrop-blur-sm md:flex md:h-full md:w-1/2 md:items-center md:bg-white md:p-12 md:backdrop-blur-none">
+            <div className="max-w-md mx-auto w-full">
               {/* Logo for mobile */}
               <div className="flex justify-center mb-8 md:hidden">
                 <div className="w-12 h-12 bg-lime-600 rounded-full flex items-center justify-center">

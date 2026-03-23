@@ -1,6 +1,6 @@
 // RIghtSec.jsx - Main Profile Content
-import React, { useState } from 'react';
-import { MapPin, CreditCard, Package, Calendar, Truck, CheckCircle } from 'lucide-react';
+import React from 'react';
+import { MapPin, CreditCard, Package, Heart, Star } from 'lucide-react';
 
 // Sample Order Data
 const sampleOrders = [
@@ -290,8 +290,5 @@ const RIghtSec = ({ user, activeTab }) => {
     </div>
   );
 };
-
-// Import missing icons
-import { Heart, Star } from 'lucide-react';
 
 export default RIghtSec;
