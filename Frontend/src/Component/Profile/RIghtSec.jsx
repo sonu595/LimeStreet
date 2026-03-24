@@ -1,286 +1,98 @@
-// RIghtSec.jsx - Main Profile Content
 import React from 'react';
-import { MapPin, CreditCard, Package, Heart, Star } from 'lucide-react';
+import { CreditCard, Heart, MapPin, Package } from 'lucide-react';
 
-// Sample Order Data
-const sampleOrders = [
-  {
-    id: '#ORD-001',
-    date: '2024-01-15',
-    total: 2499,
-    status: 'Delivered',
-    items: 2,
-    image: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=100&h=100&fit=crop'
-  },
-  {
-    id: '#ORD-002',
-    date: '2024-01-20',
-    total: 3999,
-    status: 'Processing',
-    items: 1,
-    image: 'https://images.unsplash.com/photo-1562183241-b937e95585b6?w=100&h=100&fit=crop'
-  },
-  {
-    id: '#ORD-003',
-    date: '2024-02-01',
-    total: 1599,
-    status: 'Shipped',
-    items: 3,
-    image: 'https://images.unsplash.com/photo-1562155955-1cb2d73488d7?w=100&h=100&fit=crop'
-  }
-];
+const StatCard = ({ icon: Icon, label, value }) => (
+  <div className="rounded-3xl border border-gray-200 bg-white p-5">
+    <div className="flex items-start justify-between gap-4">
+      <div>
+        <p className="text-xs uppercase tracking-[0.25em] text-gray-500">{label}</p>
+        <p className="mt-3 text-3xl font-semibold text-black">{value}</p>
+      </div>
+      <div className="rounded-2xl border border-gray-200 p-3">
+        <Icon className="h-5 w-5 text-black" />
+      </div>
+    </div>
+  </div>
+);
 
-// Sample Addresses
-const sampleAddresses = [
-  {
-    id: 1,
-    name: 'Home',
-    address: '123 Main Street, Apartment 4B, New York, NY 10001',
-    isDefault: true
-  },
-  {
-    id: 2,
-    name: 'Office',
-    address: '456 Business Park, Floor 3, New York, NY 10002',
-    isDefault: false
-  }
-];
+const InfoRow = ({ label, value }) => (
+  <div className="rounded-2xl border border-gray-200 p-4">
+    <p className="text-xs uppercase tracking-[0.25em] text-gray-500">{label}</p>
+    <p className="mt-2 break-words text-sm font-medium text-black md:text-base">{value}</p>
+  </div>
+);
 
-// Sample Payment Methods
-const samplePayments = [
-  {
-    id: 1,
-    type: 'Visa',
-    last4: '4242',
-    expiry: '12/2025',
-    isDefault: true
-  },
-  {
-    id: 2,
-    type: 'Mastercard',
-    last4: '5555',
-    expiry: '08/2024',
-    isDefault: false
-  }
-];
+const EmptyState = ({ title, description }) => (
+  <div className="rounded-3xl border border-dashed border-gray-300 bg-gray-50 px-6 py-12 text-center">
+    <h3 className="text-xl font-semibold text-black">{title}</h3>
+    <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-gray-600 md:text-base">{description}</p>
+  </div>
+);
 
 const RIghtSec = ({ user, activeTab }) => {
-  const displayName = user?.name || 'Guest User';
-  const email = user?.email || 'No email';
-  const memberSince = user?.createdAt || 'January 2024';
+  const displayName = user?.name || 'Not available';
+  const email = user?.email || 'Not available';
+  const userId = user?.id ? `#${user.id}` : 'Not available';
 
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'Delivered': return 'text-green-600 bg-green-50';
-      case 'Processing': return 'text-yellow-600 bg-yellow-50';
-      case 'Shipped': return 'text-blue-600 bg-blue-50';
-      default: return 'text-gray-600 bg-gray-50';
-    }
-  };
-
-  // Profile Overview Tab
   const renderOverview = () => (
     <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Total Orders</p>
-              <p className="text-2xl font-bold text-gray-800">12</p>
-            </div>
-            <Package className="w-8 h-8 text-lime-500" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Wishlist Items</p>
-              <p className="text-2xl font-bold text-gray-800">8</p>
-            </div>
-            <Heart className="w-8 h-8 text-lime-500" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Reward Points</p>
-              <p className="text-2xl font-bold text-gray-800">450</p>
-            </div>
-            <Star className="w-8 h-8 text-lime-500" />
-          </div>
-        </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard icon={Package} label="Orders" value="0" />
+        <StatCard icon={MapPin} label="Addresses" value="0" />
+        <StatCard icon={CreditCard} label="Payments" value="0" />
+        <StatCard icon={Heart} label="Wishlist" value="0" />
       </div>
 
-      {/* Personal Info */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="border-b border-gray-100 px-6 py-4">
-          <h3 className="font-semibold text-gray-800">Personal Information</h3>
+      <section className="rounded-3xl border border-gray-200 bg-white p-6 md:p-8">
+        <div className="mb-6">
+          <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Personal Details</p>
+          <h2 className="mt-2 text-2xl font-semibold text-black">Logged-in User Information</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Yahan sirf current logged-in account ka real data dikh raha hai.
+          </p>
         </div>
-        <div className="p-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-gray-500">Full Name</label>
-              <p className="font-medium text-gray-800">{displayName}</p>
-            </div>
-            <div>
-              <label className="text-sm text-gray-500">Email Address</label>
-              <p className="font-medium text-gray-800">{email}</p>
-            </div>
-            <div>
-              <label className="text-sm text-gray-500">Phone Number</label>
-              <p className="font-medium text-gray-800">+91 98765 43210</p>
-            </div>
-            <div>
-              <label className="text-sm text-gray-500">Member Since</label>
-              <p className="font-medium text-gray-800">{memberSince}</p>
-            </div>
-          </div>
-          <button className="text-sm text-lime-600 hover:text-lime-700 font-medium">
-            Edit Profile
-          </button>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <InfoRow label="Full Name" value={displayName} />
+          <InfoRow label="Email Address" value={email} />
+          <InfoRow label="User ID" value={userId} />
+          <InfoRow label="Status" value="Logged in" />
         </div>
-      </div>
+      </section>
     </div>
   );
 
-  // Orders Tab
   const renderOrders = () => (
-    <div className="space-y-4">
-      {sampleOrders.map((order) => (
-        <div key={order.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-gray-100 bg-gray-50">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm text-gray-500">Order ID</p>
-                <p className="font-semibold text-gray-800">{order.id}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-gray-500">Order Date</p>
-                <p className="font-medium text-gray-800">{order.date}</p>
-              </div>
-            </div>
-          </div>
-          <div className="p-4 flex gap-4">
-            <img src={order.image} alt="Product" className="w-16 h-16 rounded-lg object-cover" />
-            <div className="flex-1">
-              <p className="font-medium text-gray-800">Order Summary</p>
-              <p className="text-sm text-gray-500">{order.items} items</p>
-              <p className="text-sm font-medium text-gray-800 mt-1">₹{order.total.toLocaleString()}</p>
-            </div>
-            <div className="text-right">
-              <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                {order.status}
-              </span>
-              <button className="block mt-2 text-sm text-lime-600 hover:text-lime-700">
-                View Details
-              </button>
-            </div>
-          </div>
-        </div>
-      ))}
-      
-      <button className="w-full py-3 text-center text-lime-600 hover:text-lime-700 font-medium">
-        View All Orders
-      </button>
-    </div>
+    <EmptyState
+      title="No Orders Yet"
+      description="Order history abhi empty hai kyunki ordering system abhi build nahi hua. Jab orders aayenge, wahi real data yahan dikhaya jayega."
+    />
   );
 
-  // Addresses Tab
   const renderAddresses = () => (
-    <div className="space-y-4">
-      <button className="w-full bg-lime-600 text-white py-3 rounded-lg font-medium hover:bg-lime-700 transition">
-        + Add New Address
-      </button>
-      
-      {sampleAddresses.map((address) => (
-        <div key={address.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-          <div className="flex justify-between items-start">
-            <div className="flex gap-3">
-              <MapPin className="w-5 h-5 text-gray-400 mt-1" />
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="font-semibold text-gray-800">{address.name}</h4>
-                  {address.isDefault && (
-                    <span className="text-xs bg-lime-100 text-lime-600 px-2 py-0.5 rounded">
-                      Default
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm text-gray-600 mt-1">{address.address}</p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button className="text-sm text-gray-500 hover:text-gray-700">Edit</button>
-              <button className="text-sm text-red-500 hover:text-red-700">Delete</button>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
+    <EmptyState
+      title="No Saved Addresses"
+      description="Address management abhi connected nahi hai. Future me user ke real saved addresses yahin show honge."
+    />
   );
 
-  // Payment Methods Tab
   const renderPayments = () => (
-    <div className="space-y-4">
-      <button className="w-full bg-lime-600 text-white py-3 rounded-lg font-medium hover:bg-lime-700 transition">
-        + Add Payment Method
-      </button>
-      
-      {samplePayments.map((payment) => (
-        <div key={payment.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-          <div className="flex justify-between items-center">
-            <div className="flex gap-3">
-              <CreditCard className="w-5 h-5 text-gray-400" />
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="font-semibold text-gray-800">{payment.type} ending in {payment.last4}</h4>
-                  {payment.isDefault && (
-                    <span className="text-xs bg-lime-100 text-lime-600 px-2 py-0.5 rounded">
-                      Default
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm text-gray-500">Expires {payment.expiry}</p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button className="text-sm text-gray-500 hover:text-gray-700">Edit</button>
-              <button className="text-sm text-red-500 hover:text-red-700">Remove</button>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
+    <EmptyState
+      title="No Payment Methods"
+      description="Payment methods abhi add nahi hue hain. Is section ko intentionally clean aur empty rakha gaya hai."
+    />
   );
 
-  // Wishlist Tab
   const renderWishlist = () => (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {[1, 2, 3, 4].map((item) => (
-          <div key={item} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-            <img 
-              src={`https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=200&h=200&fit=crop`}
-              alt="Product"
-              className="w-full h-48 object-cover"
-            />
-            <div className="p-3">
-              <h4 className="font-medium text-gray-800">Premium Cotton Shirt</h4>
-              <p className="text-sm text-gray-500 mt-1">₹1,299</p>
-              <button className="w-full mt-3 bg-lime-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-lime-700 transition">
-                Add to Cart
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+    <EmptyState
+      title="Wishlist Is Empty"
+      description="Wishlist feature abhi active nahi hai, isliye koi sample products ya fake data show nahi kiya gaya."
+    />
   );
 
   return (
     <div className="flex-1">
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+      <div className="rounded-3xl border border-gray-200 bg-white p-4 sm:p-6 md:p-8">
         {activeTab === 'overview' && renderOverview()}
         {activeTab === 'orders' && renderOrders()}
         {activeTab === 'addresses' && renderAddresses()}

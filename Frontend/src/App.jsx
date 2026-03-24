@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import useAuth from './context/useAuth';
 import Nav from './Component/Navbar/Nav';
 import Home from './pages/Home/Home';
@@ -10,6 +11,7 @@ import WishList from './pages/WishList/WishList';
 import ProfilePage from './pages/Profile/ProfilePage';
 import Arrivel from './pages/New/Arrivel';
 import Sale from './pages/Sale/Sale';
+import LimeStreetLoader from './Component/Layout/LimeStreetLoader'; // Import loader
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -55,103 +57,135 @@ const PublicRoute = ({ children }) => {
 
 function App() {
   const navigate = useNavigate();
+  const [showLoader, setShowLoader] = useState(true);
+  const [isFirstVisit, setIsFirstVisit] = useState(true);
+
+  useEffect(() => {
+    // Check if user has visited before
+    const hasVisited = sessionStorage.getItem('limeStreetVisited');
+    
+    if (hasVisited) {
+      // Already visited, skip loader
+      setShowLoader(false);
+      setIsFirstVisit(false);
+    } else {
+      // First time visit - show loader
+      sessionStorage.setItem('limeStreetVisited', 'true');
+      setIsFirstVisit(true);
+    }
+  }, []);
+
+  const handleLoaderComplete = () => {
+    setShowLoader(false);
+  };
+
+  // Agar loader show ho raha hai to sirf loader dikhao
+  if (showLoader && isFirstVisit) {
+    return <LimeStreetLoader onLoadingComplete={handleLoaderComplete} />;
+  }
 
   return (
-    <div className="App">
-      <Routes>
-        <Route
-          path="/login"
-          element={
-            <PublicRoute>
-              <Login onToggle={() => navigate('/register')} />
-            </PublicRoute>
-          }
-        />
-        
-        <Route
-          path="/register"
-          element={
-            <PublicRoute>
-              <Register onToggle={() => navigate('/login')} />
-            </PublicRoute>
-          }
-        />
+    <AnimatePresence mode="wait">
+      {!showLoader && (
+        <div className="App">
+          <Routes>
+            <Route
+              path="/login"
+              element={
+                <PublicRoute>
+                  <Login onToggle={() => navigate('/register')} />
+                </PublicRoute>
+              }
+            />
+            
+            <Route
+              path="/register"
+              element={
+                <PublicRoute>
+                  <Register onToggle={() => navigate('/login')} />
+                </PublicRoute>
+              }
+            />
 
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <>
-                <Nav />
-                <Home />
-              </>
-            </ProtectedRoute>
-          }
-        />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <Nav />
+                    <Home />
+                    <Arrivel />
+                    <Sale />
+                  </>
+                </ProtectedRoute>
+              }
+            />
 
-        <Route
-          path="/arrivel"
-          element={
-            <ProtectedRoute>
-              <>
-                <Nav />
-                <Arrivel />
-              </>
-            </ProtectedRoute>
-          }
-        />
+            <Route
+              path="/arrivel"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <Nav />
+                    <Arrivel />
+                  </>
+                </ProtectedRoute>
+              }
+            />
 
-        <Route
-          path="/sale"
-          element={
-            <ProtectedRoute>
-              <>
-                <Nav />
-                <Sale />
-              </>
-            </ProtectedRoute>
-          }
-        />
+            <Route
+              path="/sale"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <Nav />
+                    <Sale />
+                  </>
+                </ProtectedRoute>
+              }
+            />
 
-        <Route
-          path="/cart"
-          element={
-            <ProtectedRoute>
-              <>
-                <Nav />
-                <Cart />
-              </>
-            </ProtectedRoute>
-          }
-        />
+            <Route
+              path="/cart"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <Nav />
+                    <Cart />
+                  </>
+                </ProtectedRoute>
+              }
+            />
 
-        <Route
-          path="/wishlist"
-          element={
-            <ProtectedRoute>
-              <>
-                <Nav />
-                <WishList />
-              </>
-            </ProtectedRoute>
-          }
-        />
+            <Route
+              path="/wishlist"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <Nav />
+                    <WishList />
+                  </>
+                </ProtectedRoute>
+              }
+            />
 
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <>
-                <Nav />
-                <ProfilePage />
-              </>
-            </ProtectedRoute>
-          }
-        />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <Nav />
+                    <ProfilePage />
+                  </>
+                </ProtectedRoute>
+              }
+            />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </div>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }
 
