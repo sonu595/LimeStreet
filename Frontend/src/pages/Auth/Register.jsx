@@ -60,7 +60,8 @@ const Register = ({ onToggle }) => {
       const result = await verifyAndRegister(
         registerData.email,
         registerData.otp,
-        registerData.name || registerData.email.split('@')[0]
+        registerData.name || registerData.email.split('@')[0],
+        registerData.contactNumber
       );
       
       if (result.success) {

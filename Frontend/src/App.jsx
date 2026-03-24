@@ -11,6 +11,7 @@ import WishList from './pages/WishList/WishList';
 import ProfilePage from './pages/Profile/ProfilePage';
 import Arrivel from './pages/New/Arrivel';
 import Sale from './pages/Sale/Sale';
+import AdminPage from './pages/Admin/AdminPage';
 import LimeStreetLoader from './Component/Layout/LimeStreetLoader'; // Import loader
 
 const ProtectedRoute = ({ children }) => {
@@ -49,6 +50,31 @@ const PublicRoute = ({ children }) => {
   }
 
   if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};
+
+const AdminRoute = ({ children }) => {
+  const { isAuthenticated, isAdmin, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white font-semibold">Loading admin...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
 
@@ -176,6 +202,18 @@ function App() {
                     <ProfilePage />
                   </>
                 </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <>
+                    <Nav />
+                    <AdminPage />
+                  </>
+                </AdminRoute>
               }
             />
 

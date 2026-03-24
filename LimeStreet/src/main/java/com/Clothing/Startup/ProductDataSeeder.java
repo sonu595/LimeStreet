@@ -1,5 +1,7 @@
 package com.Clothing.Startup;
 
+import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.boot.CommandLineRunner;
@@ -138,8 +140,13 @@ public class ProductDataSeeder {
         product.setOriginalPrice(originalPrice);
         product.setDiscountPercentage(discountPercentage);
         product.setImageUrl(imageUrl);
+        product.setImageUrls(new ArrayList<>(List.of(imageUrl)));
         product.setDescription(description);
         product.setSize(size);
+        product.setSizes(new ArrayList<>(Arrays.stream(size.split(","))
+                .map(String::trim)
+                .toList()));
+        product.setColors(new ArrayList<>(List.of("Black", "White")));
         product.setCategory(category);
         product.setNewArrival(newArrival);
         product.setSale(sale);

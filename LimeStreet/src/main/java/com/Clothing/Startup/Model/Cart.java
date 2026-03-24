@@ -2,6 +2,7 @@ package com.Clothing.Startup.Model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import java.util.List;
 
 @Entity
 @Data
@@ -21,4 +22,16 @@ public class Cart {
     
     @Transient
     private String productImage;
+
+    @Transient
+    private String productCategory;
+
+    @Transient
+    private Double originalPrice;
+
+    @Transient
+    private Integer discountPercentage;
+
+    @Transient
+    private List<String> productSizes;
 }

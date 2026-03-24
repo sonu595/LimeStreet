@@ -58,6 +58,7 @@ export const AuthProvider = ({ children }) => {
         email: decoded.sub || decoded.email || '',
         name: decoded.name || '',
         id: decoded.id,
+        role: decoded.role || 'CUSTOMER',
       };
     } catch (jwtError) {
       try {
@@ -67,6 +68,7 @@ export const AuthProvider = ({ children }) => {
           email: decoded.email || '',
           name: decoded.name || '',
           id: decoded.id,
+          role: decoded.role || 'CUSTOMER',
         };
       } catch (parseError) {
         console.error('Invalid token:', jwtError);
@@ -114,15 +116,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const verifyAndRegister = async (email, otp, name = null) => {
+  const verifyAndRegister = async (email, otp, name = null, contactNumber = '') => {
     try {
       const response = await axios.post('http://localhost:8080/api/auth/verify-register', {
         email: email,
         otp: otp,
-        name: name
+        name: name,
+        contactNumber: contactNumber
       });
 
-      const { token, email: userEmail, name: userName, id, message } = response.data;
+      const { token, email: userEmail, name: userName, id, role, message } = response.data;
 
       // Save token and user data
       localStorage.setItem('token', token);
@@ -130,7 +133,8 @@ export const AuthProvider = ({ children }) => {
       setUser({
         email: userEmail,
         name: userName,
-        id: id
+        id: id,
+        role: role
       });
       setOtpSent(false);
       setTempEmail('');
@@ -153,14 +157,15 @@ export const AuthProvider = ({ children }) => {
         otp: otp
       });
 
-      const { token, email: userEmail, name, id, message } = response.data;
+      const { token, email: userEmail, name, id, role, message } = response.data;
 
       localStorage.setItem('token', token);
       setToken(token);
       setUser({
         email: userEmail,
         name: name,
-        id: id
+        id: id,
+        role: role
       });
       setOtpSent(false);
       setTempEmail('');
@@ -193,7 +198,8 @@ export const AuthProvider = ({ children }) => {
         const mockToken = btoa(JSON.stringify({ 
           email: userData.email, 
           name: userData.name,
-          id: userData.id 
+          id: userData.id,
+          role: userData.role || 'CUSTOMER'
         }));
         
         localStorage.setItem('token', mockToken);
@@ -201,7 +207,8 @@ export const AuthProvider = ({ children }) => {
         setUser({
           email: userData.email,
           name: userData.name,
-          id: userData.id
+          id: userData.id,
+          role: userData.role || 'CUSTOMER'
         });
 
         return { success: true };
@@ -261,7 +268,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     checkOtpStatus,
     axiosInstance,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
+    isAdmin: user?.role === 'ADMIN'
   };
 
   return (

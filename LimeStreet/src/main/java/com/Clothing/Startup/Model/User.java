@@ -14,9 +14,15 @@ public class User {
     private String name;
     private String email;
     private String password;
+
+    @Column(name = "contact_number")
+    private String contactNumber;
     
     @Column(name = "provider")
     private String provider; // "OTP", "EMAIL", "GOOGLE" etc.
+
+    @Column(name = "role")
+    private String role;
     
     @Column(name = "created_at")
     private java.time.LocalDateTime createdAt;
@@ -24,5 +30,9 @@ public class User {
     @PrePersist
     protected void onCreate() {
         createdAt = java.time.LocalDateTime.now();
+
+        if (role == null || role.isBlank()) {
+            role = "CUSTOMER";
+        }
     }
 }

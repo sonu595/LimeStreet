@@ -65,6 +65,7 @@ public class AuthController {
         String email = request.get("email");
         String otp = request.get("otp");
         String name = request.get("name");
+        String contactNumber = request.get("contactNumber");
 
         String savedOtp = otpService.getOtp(email)
                 .orElseThrow(() -> new RuntimeException("OTP missing ya expire ho gaya. Dobara OTP bhejo."));
@@ -86,21 +87,30 @@ public class AuthController {
             user.setEmail(email);
             user.setName(name);
             user.setPassword("OTP_USER_" + UUID.randomUUID());
+            user.setContactNumber(contactNumber);
             user.setProvider("OTP");
+            user.setRole("CUSTOMER");
             user = userRepo.save(user);
 
             System.out.println("New user registered via OTP: " + email);
         } else {
+            if ((user.getContactNumber() == null || user.getContactNumber().isBlank())
+                    && contactNumber != null
+                    && !contactNumber.isBlank()) {
+                user.setContactNumber(contactNumber);
+                user = userRepo.save(user);
+            }
             System.out.println("Existing user logged in via OTP: " + email);
         }
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getName());
+        String token = jwtUtil.generateToken(user);
 
         return new AuthResponse(
             token,
             user.getEmail(),
             user.getName(),
             user.getId().toString(),
+            user.getRole(),
             "OTP verification successful!"
         );
     }
@@ -122,13 +132,14 @@ public class AuthController {
         User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User register nahi hai. Pehle register karo!"));
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getName());
+        String token = jwtUtil.generateToken(user);
 
         return new AuthResponse(
             token,
             user.getEmail(),
             user.getName(),
             user.getId().toString(),
+            user.getRole(),
             "Login successful!"
         );
     }

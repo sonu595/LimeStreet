@@ -1,5 +1,6 @@
 package com.Clothing.Startup.Util;
 
+import com.Clothing.Startup.Model.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
@@ -18,14 +19,16 @@ public class JwtUtil {
     }
 
     // Generate Token
-    public String generateToken(String email, String name) {
+    public String generateToken(User user) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("name", name);
-        claims.put("email", email);
+        claims.put("name", user.getName());
+        claims.put("email", user.getEmail());
+        claims.put("id", user.getId());
+        claims.put("role", user.getRole());
 
         return Jwts.builder()
                 .setClaims(claims)
-                .setSubject(email)
+                .setSubject(user.getEmail())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -44,21 +47,41 @@ public class JwtUtil {
 
     // Extract Email from Token
     public String extractEmail(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+        return extractAllClaims(token).getSubject();
     }
 
     // Extract Name from Token
     public String extractName(String token) {
+        return extractAllClaims(token).get("name", String.class);
+    }
+
+    public String extractRole(String token) {
+        return extractAllClaims(token).get("role", String.class);
+    }
+
+    public Long extractUserId(String token) {
+        Object id = extractAllClaims(token).get("id");
+
+        if (id == null) {
+            return null;
+        }
+
+        if (id instanceof Integer integerId) {
+            return integerId.longValue();
+        }
+
+        if (id instanceof Long longId) {
+            return longId;
+        }
+
+        return Long.valueOf(String.valueOf(id));
+    }
+
+    private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token)
-                .getBody()
-                .get("name", String.class);
+                .getBody();
     }
 }
