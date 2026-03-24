@@ -1,10 +1,10 @@
 import React from 'react'
-import Model from '../../assets/Model.png'
+import Model from '../../assets/6bf21a6276e546338a440aba71094c73-removebg-preview.png'
 import { motion } from 'framer-motion'
 
 const Hero = () => {
   return (
-    <div className='relative h-125 md:h-150 lg:h-175 bg-black overflow-hidden flex items-center justify-center'>
+    <div className='relative flex h-[38rem] items-center justify-center overflow-hidden bg-black md:h-150 lg:h-175'>
       
       {/* Premium Gradient Background */}
       <div className='absolute inset-0 bg-linear-to-b from-black via-zinc-900 to-black'></div>
@@ -17,11 +17,11 @@ const Hero = () => {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 1 }}
-        className='absolute left-1/2 -translate-x-1/2 -translate-y-1/3
-                       text-[50px] sm:text-[80px] md:text-[120px] lg:text-[180px]
-                       font-extrabold text-white/5 whitespace-nowrap
+        className='absolute left-1/2 top-[68%] z-0 -translate-x-1/2 -translate-y-1/2
+                       text-[56px] sm:text-[88px] md:text-[150px] lg:text-[220px] xl:text-[260px]
+                       font-extrabold text-white/[0.06] whitespace-nowrap
                        select-none pointer-events-none
-                       scale-y-110 md:scale-y-125 scale-x-95 md:scale-x-90
+                       scale-y-110 md:scale-y-120 scale-x-95 md:scale-x-90
                        tracking-tighter'
       >
         PURE COMFORT
@@ -35,9 +35,12 @@ const Hero = () => {
         src={Model}
         alt="Model"
         className="
-          absolute bottom-0 left-[75%] -translate-x-1/2
-          w-[85%] sm:w-[75%] md:w-[65%] lg:w-[55%]
-          h-auto object-contain z-20
+          absolute bottom-0 left-[55%] z-20 h-[72%] w-auto max-w-none -translate-x-1/2
+          sm:h-[80%]
+          md:left-auto md:right-[4%] md:h-[90%] md:translate-x-0
+          lg:right-[7%] lg:h-[96%]
+          xl:right-[9%]
+          object-contain
           drop-shadow-2xl
         "
       />
@@ -47,12 +50,12 @@ const Hero = () => {
         initial={{ opacity: 0, x: -30 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6, delay: 0.6 }}
-        className='absolute left-4 sm:left-6 md:left-8 lg:left-12 bottom-8 sm:bottom-10 md:bottom-12 lg:bottom-16
-                       max-w-45 sm:max-w-55 md:max-w-xs
-                       text-xs sm:text-sm md:text-base
-                       text-gray-300 z-10
-                       leading-relaxed font-light
-                       border-l-2 border-white/30 pl-3 sm:pl-4'
+        className='absolute left-4 bottom-6 z-30 max-w-40 border-l-2 border-white/30 pl-3
+                       text-xs leading-relaxed font-light text-gray-300
+                       sm:left-6 sm:bottom-8 sm:max-w-52 sm:pl-4 sm:text-sm
+                       md:left-8 md:bottom-12 md:max-w-xs md:text-base
+                       lg:left-12 lg:bottom-16
+                      '
       >
         Designed for everyday movement. Soft fabrics, relaxed fits, and effortless comfort.
       </motion.h3>

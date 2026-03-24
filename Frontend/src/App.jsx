@@ -114,8 +114,6 @@ function App() {
                   <>
                     <Nav />
                     <Home />
-                    <Arrivel />
-                    <Sale />
                   </>
                 </ProtectedRoute>
               }

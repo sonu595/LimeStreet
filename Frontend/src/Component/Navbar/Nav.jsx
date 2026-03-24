@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 
 const Nav = () => {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeLink, setActiveLink] = useState('');
   const location = useLocation();
+  
+  const { scrollYProgress } = useScroll();
+  const progressBarWidth = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
 
-  // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 50) {
@@ -22,7 +24,6 @@ const Nav = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Set active link based on current path
   useEffect(() => {
     setActiveLink(location.pathname);
   }, [location]);
@@ -46,7 +47,7 @@ const Nav = () => {
     >
       <div className="flex items-center justify-between px-4 py-3 md:px-10">
         
-        {/* Premium Text Logo */}
+        {/* Logo */}
         <motion.div
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -59,20 +60,18 @@ const Nav = () => {
               transition={{ duration: 0.5 }}
               className="flex items-center gap-1"
             >
-              {/* Main Logo Text */}
               <span className="text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
                 LIME
               </span>
               <span className="text-2xl md:text-3xl font-light tracking-tight text-white">
                 STREET
               </span>
-              {/* Optional Dot */}
               <span className="w-1 h-1 bg-white rounded-full ml-1"></span>
             </motion.div>
           </Link>
         </motion.div>
 
-        {/* Desktop Navigation Links */}
+        {/* Desktop Navigation */}
         <div className="hidden md:flex text-lg gap-8">
           {navLinks.map((link, index) => (
             <motion.div
@@ -90,7 +89,6 @@ const Nav = () => {
                 }`}
               >
                 {link.name}
-                {/* Animated Underline */}
                 <motion.span
                   className={`absolute left-0 bottom-0 h-0.5 bg-gradient-to-r from-white to-gray-400 transition-all duration-300 ${
                     activeLink === link.path ? 'w-full' : 'w-0 group-hover:w-full'
@@ -102,89 +100,35 @@ const Nav = () => {
           ))}
         </div>
 
-        {/* Right Side Icons */}
+        {/* Icons */}
         <div className="flex items-center gap-3 md:gap-5">
-          
-          {/* Cart Icon */}
-          <motion.div
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="relative"
-          >
+          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="relative">
             <Link to='/cart' className="group">
               <div className="w-9 h-9 md:w-10 md:h-10 flex items-center text-white justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all duration-300 hover:shadow-md">
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="20" 
-                  height="20" 
-                  viewBox="0 0 24 24" 
-                  fill="none"
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                  className="transition-transform duration-300 group-hover:scale-110"
-                >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300 group-hover:scale-110">
                   <circle cx="8" cy="21" r="1"/>
                   <circle cx="19" cy="21" r="1"/>
                   <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
                 </svg>
               </div>
             </Link>
-            {/* Cart Badge */}
-            <motion.span 
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center"
-            >
-              0
-            </motion.span>
+            <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center">0</motion.span>
           </motion.div>
 
-          {/* Wishlist Icon */}
-          <motion.div
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
+          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
             <Link to='/wishlist' className="group">
               <div className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center text-white rounded-full bg-white/10 hover:bg-white/20 transition-all duration-300 hover:shadow-md">
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="20" 
-                  height="20" 
-                  viewBox="0 0 24 24" 
-                  fill="none"
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                  className="transition-transform duration-300 group-hover:scale-110"
-                >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300 group-hover:scale-110">
                   <path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"/>
                 </svg>
               </div>
             </Link>
           </motion.div>
 
-          {/* Profile Icon */}
-          <motion.div
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
+          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
             <Link to='/profile' className="group">
               <div className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center text-white rounded-full bg-white/10 hover:bg-white/20 transition-all duration-300 hover:shadow-md">
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="20" 
-                  height="20" 
-                  viewBox="0 0 24 24" 
-                  fill="none"
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                  className="transition-transform duration-300 group-hover:scale-110"
-                >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300 group-hover:scale-110">
                   <circle cx="12" cy="8" r="5"/>
                   <path d="M20 21a8 8 0 0 0-16 0"/>
                 </svg>
@@ -192,25 +136,20 @@ const Nav = () => {
             </Link>
           </motion.div>
 
-          {/* Mobile Menu Button */}
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             className="md:hidden text-3xl ml-2 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all text-white"
             onClick={() => setOpen(!open)}
           >
-            <motion.span
-              animate={{ rotate: open ? 90 : 0 }}
-              transition={{ duration: 0.3 }}
-            >
+            <motion.span animate={{ rotate: open ? 90 : 0 }} transition={{ duration: 0.3 }}>
               ☰
             </motion.span>
           </motion.button>
-
         </div>
       </div>
 
-      {/* Mobile Menu with Animation */}
+      {/* Mobile Menu */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -222,21 +161,10 @@ const Nav = () => {
           >
             <div className="flex flex-col gap-4 px-6 py-5">
               {navLinks.map((link, index) => (
-                <motion.div
-                  key={link.path}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Link
-                    to={link.path}
-                    onClick={() => setOpen(false)}
-                    className={`block py-2 text-lg transition-all duration-300 ${
-                      activeLink === link.path
-                        ? 'text-white font-semibold border-l-4 border-white pl-3'
-                        : 'text-gray-400 hover:text-white hover:pl-3'
-                    }`}
-                  >
+                <motion.div key={link.path} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.1 }}>
+                  <Link to={link.path} onClick={() => setOpen(false)} className={`block py-2 text-lg transition-all duration-300 ${
+                    activeLink === link.path ? 'text-white font-semibold border-l-4 border-white pl-3' : 'text-gray-400 hover:text-white hover:pl-3'
+                  }`}>
                     {link.name}
                   </Link>
                 </motion.div>
@@ -246,13 +174,21 @@ const Nav = () => {
         )}
       </AnimatePresence>
 
-      {/* Scroll Progress Bar */}
+      {/* ✅ SCROLL PROGRESS BAR - NAVBAR KE BOTTOM MEIN */}
       <motion.div
-        className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-white to-gray-500"
-        style={{ width: "0%" }}
-        animate={{ width: `${(window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100}%` }}
-        transition={{ duration: 0.1 }}
+        className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-white via-gray-400 to-white"
+        style={{ 
+          width: progressBarWidth,
+          boxShadow: '0 0 8px rgba(255,255,255,0.5)'
+        }}
       />
+      
+      {/* Optional: Glow Effect */}
+      <motion.div
+        className="absolute bottom-0 left-0 h-[2px] bg-white/20 blur-sm"
+        style={{ width: progressBarWidth }}
+      />
+      
     </motion.div>
   );
 };

@@ -17,7 +17,12 @@ public class Product {
 
     private String name;
     private double price;
+    private Double originalPrice;
+    private Integer discountPercentage;
     private String imageUrl;
     private String description;
     private String size;
+    private String category;
+    private boolean newArrival;
+    private boolean sale;
 }

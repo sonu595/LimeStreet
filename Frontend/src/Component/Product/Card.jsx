@@ -7,6 +7,14 @@ const Card = ({ product }) => {
   
   if (!product) return null
 
+  const formattedPrice = Number(product.price || 0).toLocaleString('en-IN')
+  const formattedOriginalPrice = product.originalPrice
+    ? Number(product.originalPrice).toLocaleString('en-IN')
+    : null
+  const sizes = product.size
+    ? product.size.split(',').map((item) => item.trim()).filter(Boolean)
+    : ['S', 'M', 'L', 'XL']
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
@@ -67,7 +75,7 @@ const Card = ({ product }) => {
               {product.name}
             </motion.h3>
             <p className='text-gray-400 text-xs mt-1 font-light'>
-              Premium Streetwear
+              {product.category || 'Premium Streetwear'}
             </p>
           </div>
           
@@ -98,11 +106,11 @@ const Card = ({ product }) => {
         <div className='flex justify-between items-center pt-2'>
           <div>
             <span className='text-white font-semibold text-lg'>
-              ${product.price || '99'}
+              ₹{formattedPrice}
             </span>
-            {product.originalPrice && (
+            {formattedOriginalPrice && (
               <span className='text-gray-500 text-xs line-through ml-2'>
-                ${product.originalPrice}
+                ₹{formattedOriginalPrice}
               </span>
             )}
           </div>
@@ -121,7 +129,7 @@ const Card = ({ product }) => {
 
         {/* Size Indicator */}
         <div className='flex gap-1 pt-1'>
-          {['S', 'M', 'L', 'XL'].map(size => (
+          {sizes.map(size => (
             <span key={size} className='text-[10px] text-gray-500 hover:text-white transition cursor-pointer'>
               {size}
             </span>
@@ -131,16 +139,16 @@ const Card = ({ product }) => {
 
       {/* Decorative Elements */}
       <div className='absolute top-3 left-3 z-10'>
-        {product.isNew && (
+        {product.newArrival && (
           <span className='bg-white/20 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full'>
             NEW
           </span>
         )}
       </div>
       <div className='absolute top-3 right-3 z-10'>
-        {product.isSale && (
+        {product.sale && (
           <span className='bg-red-500/80 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full'>
-            SALE
+            {product.discountPercentage ? `${product.discountPercentage}% OFF` : 'SALE'}
           </span>
         )}
       </div>

@@ -28,6 +28,16 @@ public class ProductController {
         return repo.findAll();
     }
 
+    @GetMapping("/new-arrivals")
+    public List<Product> newArrivals() {
+        return repo.findByNewArrivalTrueOrderByIdDesc();
+    }
+
+    @GetMapping("/sale-items")
+    public List<Product> saleItems() {
+        return repo.findBySaleTrueOrderByDiscountPercentageDescIdDesc();
+    }
+
     @PostMapping
     public Product addProduct(@RequestBody Product p){
         return repo.save(p);
