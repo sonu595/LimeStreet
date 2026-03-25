@@ -21,7 +21,7 @@ const Arrivel = () => {
   }, [])
 
   return (
-    <div className="min-h-screen bg-black px-4 py-14 md:px-8 lg:px-16">
+    <div className="min-h-screen bg-black px-4 py-14 pb-24 md:px-8 md:pb-14 lg:px-16">
       <div className="mx-auto max-w-7xl">
         <div className="border-b border-white/10 pb-12">
           <p className="text-center text-xs uppercase tracking-[0.4em] text-gray-500">Collection</p>
@@ -47,7 +47,7 @@ const Arrivel = () => {
             </div>
           ) : (
             products.length > 0 ? (
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:gap-5 xl:grid-cols-4">
                 {products.map((item) => (
                   <Card key={item.id} product={item} />
                 ))}

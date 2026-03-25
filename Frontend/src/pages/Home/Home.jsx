@@ -6,7 +6,7 @@ import V from '../../Component/Video/V'
 
 const Home = () => {
   return (
-    <div className="bg-black">
+    <div className="bg-black pb-24 md:pb-0">
       <V />
       <div className='px-4 md:px-8 lg:px-16 py-8 md:py-12 bg-black'>
         <Line/>

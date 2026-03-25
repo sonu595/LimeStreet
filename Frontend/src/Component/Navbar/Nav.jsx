@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { Heart, Menu, ShoppingCart, User, X } from 'lucide-react';
 import useAuth from '../../context/useAuth';
-import { useStore } from '../../context/StoreContext';
 
 const Nav = () => {
   const [open, setOpen] = useState(false);
@@ -11,14 +10,13 @@ const Nav = () => {
   const [activeLink, setActiveLink] = useState('');
   const location = useLocation();
   const { isAdmin } = useAuth();
-  const { cartCount, wishlistCount } = useStore();
   
   const { scrollYProgress } = useScroll();
   const progressBarWidth = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 50) {
+      if (window.scrollY > 12) {
         setScrolled(true);
       } else {
         setScrolled(false);
@@ -46,9 +44,9 @@ const Nav = () => {
       animate={{ y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
       className={`sticky top-0 z-50 transition-all duration-300 ${
-        scrolled 
-          ? 'bg-black/95 backdrop-blur-md shadow-lg' 
-          : 'bg-black shadow-sm'
+        scrolled
+          ? 'bg-black/95 backdrop-blur-xl shadow-lg'
+          : 'bg-black/92'
       }`}
     >
       <div className="flex items-center justify-between px-4 py-3 md:px-10">
@@ -108,17 +106,13 @@ const Nav = () => {
 
         {/* Icons */}
         <div className="flex items-center gap-3 md:gap-5">
+          <div className="hidden items-center gap-3 md:flex md:gap-5">
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="relative">
             <Link to='/cart' className="group">
               <div className="w-9 h-9 md:w-10 md:h-10 flex items-center text-white justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all duration-300 hover:shadow-md">
                 <ShoppingCart className="transition-transform duration-300 group-hover:scale-110" size={20} />
               </div>
             </Link>
-            {cartCount > 0 && (
-              <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center">
-                {cartCount}
-              </motion.span>
-            )}
           </motion.div>
 
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="relative">
@@ -127,11 +121,6 @@ const Nav = () => {
                 <Heart className="transition-transform duration-300 group-hover:scale-110" size={20} />
               </div>
             </Link>
-            {wishlistCount > 0 && (
-              <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-white text-black text-[10px] rounded-full flex items-center justify-center">
-                {wishlistCount}
-              </motion.span>
-            )}
           </motion.div>
 
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
@@ -141,6 +130,7 @@ const Nav = () => {
               </div>
             </Link>
           </motion.div>
+          </div>
 
           <motion.button
             whileHover={{ scale: 1.1 }}
@@ -183,16 +173,7 @@ const Nav = () => {
 
       {/* SCROLL PROGRESS BAR - NAVBAR KE BOTTOM MEIN */}
       <motion.div
-        className="absolute bottom-0 left-0 h-0.5 bg-linear-to-r from-white via-gray-400 to-white"
-        style={{ 
-          width: progressBarWidth,
-          boxShadow: '0 0 8px rgba(255,255,255,0.5)'
-        }}
-      />
-      
-      {/* Optional: Glow Effect */}
-      <motion.div
-        className="absolute bottom-0 left-0 h-0.5 bg-white/20 blur-sm"
+        className="absolute bottom-0 left-0 h-px bg-white/70"
         style={{ width: progressBarWidth }}
       />
       

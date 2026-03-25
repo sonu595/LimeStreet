@@ -144,6 +144,34 @@ public class AuthController {
         );
     }
 
+    @PostMapping("/password-login")
+    public AuthResponse passwordLogin(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String password = request.get("password");
+
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if ("OTP".equalsIgnoreCase(user.getProvider()) && (user.getPassword() == null || user.getPassword().startsWith("OTP_USER_"))) {
+            throw new RuntimeException("Please login with OTP for this account.");
+        }
+
+        if (password == null || !password.equals(user.getPassword())) {
+            throw new RuntimeException("Invalid password");
+        }
+
+        String token = jwtUtil.generateToken(user);
+
+        return new AuthResponse(
+                token,
+                user.getEmail(),
+                user.getName(),
+                user.getId().toString(),
+                user.getRole(),
+                "Login successful!"
+        );
+    }
+
     @GetMapping("/otp-status/{email}")
     public Map<String, Object> checkOtpStatus(@PathVariable String email) {
         Map<String, Object> status = new HashMap<>();

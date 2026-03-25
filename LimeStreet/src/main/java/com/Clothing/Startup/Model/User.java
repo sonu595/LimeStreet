@@ -17,6 +17,20 @@ public class User {
 
     @Column(name = "contact_number")
     private String contactNumber;
+
+    @Column(name = "address_line_1")
+    private String addressLine1;
+
+    @Column(name = "address_line_2")
+    private String addressLine2;
+
+    private String city;
+    private String state;
+
+    @Column(name = "postal_code")
+    private String postalCode;
+
+    private String country;
     
     @Column(name = "provider")
     private String provider; // "OTP", "EMAIL", "GOOGLE" etc.
@@ -33,6 +47,10 @@ public class User {
 
         if (role == null || role.isBlank()) {
             role = "CUSTOMER";
+        }
+
+        if (country == null || country.isBlank()) {
+            country = "India";
         }
     }
 }

@@ -2,6 +2,7 @@ package com.Clothing.Startup.Controller;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -71,9 +72,64 @@ public class CartController {
             item.setOriginalPrice(product.getOriginalPrice());
             item.setDiscountPercentage(product.getDiscountPercentage());
             item.setProductSizes(product.getSizes());
+            item.setProductColors(product.getColors());
         }
 
         return item;
+    }
+
+    private String normalizeVariant(String value) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+
+        return value.trim();
+    }
+
+    private String resolveSize(Product product, String requestedSize) {
+        String normalized = normalizeVariant(requestedSize);
+
+        if (product.getSizes() == null || product.getSizes().isEmpty()) {
+            return normalized;
+        }
+
+        if (normalized.isBlank()) {
+            return product.getSizes().get(0);
+        }
+
+        boolean valid = product.getSizes().stream().anyMatch(size -> size.equalsIgnoreCase(normalized));
+
+        if (!valid) {
+            throw new RuntimeException("Selected size is not available for this product.");
+        }
+
+        return product.getSizes().stream()
+                .filter(size -> size.equalsIgnoreCase(normalized))
+                .findFirst()
+                .orElse(normalized);
+    }
+
+    private String resolveColor(Product product, String requestedColor) {
+        String normalized = normalizeVariant(requestedColor);
+
+        if (product.getColors() == null || product.getColors().isEmpty()) {
+            return normalized;
+        }
+
+        if (normalized.isBlank()) {
+            return product.getColors().get(0);
+        }
+
+        boolean valid = product.getColors().stream().anyMatch(color -> color.equalsIgnoreCase(normalized));
+
+        if (!valid) {
+            throw new RuntimeException("Selected color is not available for this product.");
+        }
+
+        return product.getColors().stream()
+                .filter(color -> color.equalsIgnoreCase(normalized))
+                .findFirst()
+                .orElse(normalized);
     }
 
     @PostMapping
@@ -83,17 +139,28 @@ public class CartController {
         Product product = productRepo.findById(cart.getProductId())
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        Cart savedCart = cartRepo.findByUserIdAndProductId(userId, cart.getProductId())
+        String selectedSize = resolveSize(product, cart.getSelectedSize());
+        String selectedColor = resolveColor(product, cart.getSelectedColor());
+
+        Cart savedCart = cartRepo.findByUserIdAndProductIdAndSelectedSizeAndSelectedColor(
+                        userId,
+                        cart.getProductId(),
+                        selectedSize,
+                        selectedColor)
                 .map(existingItem -> {
                     int currentQuantity = existingItem.getQuantity() == null ? 0 : existingItem.getQuantity();
                     existingItem.setQuantity(currentQuantity + Math.max(cart.getQuantity() == null ? 1 : cart.getQuantity(), 1));
                     existingItem.setPrice(product.getPrice());
+                    existingItem.setSelectedSize(selectedSize);
+                    existingItem.setSelectedColor(selectedColor);
                     return existingItem;
                 })
                 .orElseGet(() -> {
                     cart.setUserId(userId);
                     cart.setQuantity(Math.max(cart.getQuantity() == null ? 1 : cart.getQuantity(), 1));
                     cart.setPrice(product.getPrice());
+                    cart.setSelectedSize(selectedSize);
+                    cart.setSelectedColor(selectedColor);
                     return cart;
                 });
 
@@ -118,11 +185,11 @@ public class CartController {
         Integer quantity = request.getOrDefault("quantity", 1);
 
         if (quantity <= 0) {
-            cartRepo.deleteByUserIdAndProductId(userId, productId);
+            cartRepo.deleteByIdAndUserId(productId, userId);
             throw new RuntimeException("Cart item removed");
         }
 
-        Cart cartItem = cartRepo.findByUserIdAndProductId(userId, productId)
+        Cart cartItem = cartRepo.findByIdAndUserId(productId, userId)
                 .orElseThrow(() -> new RuntimeException("Cart item not found"));
 
         cartItem.setQuantity(quantity);
@@ -132,7 +199,7 @@ public class CartController {
     @DeleteMapping("/{productId}")
     public Map<String, String> removeFromCart(@PathVariable Long productId, @RequestHeader("Authorization") String authorizationHeader) {
         Long userId = getUserIdFromToken(authorizationHeader);
-        cartRepo.deleteByUserIdAndProductId(userId, productId);
+        cartRepo.deleteByIdAndUserId(productId, userId);
         return Map.of("message", "Item removed from cart");
     }
 
@@ -155,7 +222,9 @@ public class CartController {
 
     @DeleteMapping("/remove/{productId}")
     public Map<String, String> removeFromCartLegacy(@PathVariable Long productId, @RequestHeader("Authorization") String authorizationHeader) {
-        return removeFromCart(productId, authorizationHeader);
+        Long userId = getUserIdFromToken(authorizationHeader);
+        cartRepo.deleteByUserIdAndProductId(userId, productId);
+        return Map.of("message", "Item removed from cart");
     }
 
     @DeleteMapping("/clear")

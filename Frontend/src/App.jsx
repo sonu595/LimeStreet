@@ -3,15 +3,19 @@ import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import useAuth from './context/useAuth';
 import Nav from './Component/Navbar/Nav';
+import MobileBottomNav from './Component/Navbar/MobileBottomNav';
 import Home from './pages/Home/Home';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
-import Cart from './pages/Cart/Cart';
-import WishList from './pages/WishList/WishList';
-import ProfilePage from './pages/Profile/ProfilePage';
+import CartPage from './pages/Cart/CartPage';
+import WishListPage from './pages/WishList/WishListPage';
+import SimpleProfilePage from './pages/Profile/SimpleProfilePage';
+import OrdersPage from './pages/Orders/OrdersPage';
+import ProductDetailsPage from './pages/Product/ProductDetailsPage';
+import BuyNowPage from './pages/Buy/BuyNowPage';
 import Arrivel from './pages/New/Arrivel';
 import Sale from './pages/Sale/Sale';
-import AdminPage from './pages/Admin/AdminPage';
+import AdminConsole from './pages/Admin/AdminConsole';
 import LimeStreetLoader from './Component/Layout/LimeStreetLoader'; // Import loader
 
 const ProtectedRoute = ({ children }) => {
@@ -81,6 +85,14 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
+const StoreLayout = ({ children }) => (
+  <>
+    <Nav />
+    {children}
+    <MobileBottomNav />
+  </>
+)
+
 function App() {
   const navigate = useNavigate();
   const [showLoader, setShowLoader] = useState(true);
@@ -138,8 +150,9 @@ function App() {
               element={
                 <ProtectedRoute>
                   <>
-                    <Nav />
-                    <Home />
+                    <StoreLayout>
+                      <Home />
+                    </StoreLayout>
                   </>
                 </ProtectedRoute>
               }
@@ -150,8 +163,9 @@ function App() {
               element={
                 <ProtectedRoute>
                   <>
-                    <Nav />
-                    <Arrivel />
+                    <StoreLayout>
+                      <Arrivel />
+                    </StoreLayout>
                   </>
                 </ProtectedRoute>
               }
@@ -162,8 +176,9 @@ function App() {
               element={
                 <ProtectedRoute>
                   <>
-                    <Nav />
-                    <Sale />
+                    <StoreLayout>
+                      <Sale />
+                    </StoreLayout>
                   </>
                 </ProtectedRoute>
               }
@@ -174,8 +189,9 @@ function App() {
               element={
                 <ProtectedRoute>
                   <>
-                    <Nav />
-                    <Cart />
+                    <StoreLayout>
+                      <CartPage />
+                    </StoreLayout>
                   </>
                 </ProtectedRoute>
               }
@@ -186,8 +202,9 @@ function App() {
               element={
                 <ProtectedRoute>
                   <>
-                    <Nav />
-                    <WishList />
+                    <StoreLayout>
+                      <WishListPage />
+                    </StoreLayout>
                   </>
                 </ProtectedRoute>
               }
@@ -198,8 +215,48 @@ function App() {
               element={
                 <ProtectedRoute>
                   <>
-                    <Nav />
-                    <ProfilePage />
+                    <StoreLayout>
+                      <SimpleProfilePage />
+                    </StoreLayout>
+                  </>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/orders"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <StoreLayout>
+                      <OrdersPage />
+                    </StoreLayout>
+                  </>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/product/:id"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <StoreLayout>
+                      <ProductDetailsPage />
+                    </StoreLayout>
+                  </>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/buy/:id"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <StoreLayout>
+                      <BuyNowPage />
+                    </StoreLayout>
                   </>
                 </ProtectedRoute>
               }
@@ -211,7 +268,7 @@ function App() {
                 <AdminRoute>
                   <>
                     <Nav />
-                    <AdminPage />
+                    <AdminConsole />
                   </>
                 </AdminRoute>
               }

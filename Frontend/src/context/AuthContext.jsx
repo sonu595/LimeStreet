@@ -1,258 +1,305 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import axios from 'axios';
-import { jwtDecode } from 'jwt-decode';
+import React, { createContext, useContext, useEffect, useState } from 'react'
+import axios from 'axios'
+import { jwtDecode } from 'jwt-decode'
 
-export const AuthContext = createContext(null);
+export const AuthContext = createContext(null)
+
+const API_BASE_URL = 'http://localhost:8080/api'
+const axiosInstance = axios.create({
+  baseURL: API_BASE_URL
+})
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext)
 
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth must be used within an AuthProvider')
   }
 
-  return context;
-};
+  return context
+}
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token'));
-  const [loading, setLoading] = useState(true);
-  const [otpSent, setOtpSent] = useState(false);
-  const [tempEmail, setTempEmail] = useState('');
+const parseStoredToken = (storedToken) => {
+  if (!storedToken) {
+    return null
+  }
 
-  const axiosInstance = axios.create({
-    baseURL: 'http://localhost:8080/api',
-  });
+  try {
+    const decoded = jwtDecode(storedToken)
 
-  axiosInstance.interceptors.request.use(
-    (config) => {
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-    },
-    (error) => {
-      return Promise.reject(error);
+    if (decoded.exp && decoded.exp * 1000 < Date.now()) {
+      return null
     }
-  );
 
-  const clearAuthState = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
-    setOtpSent(false);
-    setTempEmail('');
-  };
-
-  const getUserFromStoredToken = (storedToken) => {
+    return {
+      email: decoded.sub || decoded.email || '',
+      name: decoded.name || '',
+      id: decoded.id,
+      role: decoded.role || 'CUSTOMER'
+    }
+  } catch (jwtError) {
     try {
-      const decoded = jwtDecode(storedToken);
-
-      if (decoded.exp && decoded.exp * 1000 < Date.now()) {
-        return null;
-      }
+      const decoded = JSON.parse(atob(storedToken))
 
       return {
-        email: decoded.sub || decoded.email || '',
+        email: decoded.email || '',
         name: decoded.name || '',
         id: decoded.id,
-        role: decoded.role || 'CUSTOMER',
-      };
-    } catch (jwtError) {
-      try {
-        const decoded = JSON.parse(atob(storedToken));
-
-        return {
-          email: decoded.email || '',
-          name: decoded.name || '',
-          id: decoded.id,
-          role: decoded.role || 'CUSTOMER',
-        };
-      } catch (parseError) {
-        console.error('Invalid token:', jwtError);
-        console.error('Token parse fallback failed:', parseError);
-        return null;
+        role: decoded.role || 'CUSTOMER'
       }
+    } catch (parseError) {
+      console.error('Invalid token:', jwtError)
+      console.error('Token parse fallback failed:', parseError)
+      return null
     }
-  };
+  }
+}
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null)
+  const [token, setToken] = useState(localStorage.getItem('token'))
+  const [loading, setLoading] = useState(true)
+  const [otpSent, setOtpSent] = useState(false)
+  const [tempEmail, setTempEmail] = useState('')
 
   useEffect(() => {
-    const initAuth = () => {
-      if (token) {
-        const parsedUser = getUserFromStoredToken(token);
+    if (token) {
+      axiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`
+    } else {
+      delete axiosInstance.defaults.headers.common.Authorization
+    }
+  }, [token])
 
-        if (parsedUser) {
-          setUser(parsedUser);
-        } else {
-          clearAuthState();
-        }
+  const clearAuthState = () => {
+    localStorage.removeItem('token')
+    setToken(null)
+    setUser(null)
+    setOtpSent(false)
+    setTempEmail('')
+    delete axiosInstance.defaults.headers.common.Authorization
+  }
+
+  const applyAuthResponse = (authResponse) => {
+    const {
+      token: nextToken,
+      email,
+      name,
+      id,
+      role,
+      contactNumber,
+      addressLine1,
+      addressLine2,
+      city,
+      state,
+      postalCode,
+      country,
+      createdAt
+    } = authResponse
+
+    localStorage.setItem('token', nextToken)
+    setToken(nextToken)
+    setUser({
+      email,
+      name,
+      id,
+      role,
+      contactNumber: contactNumber || '',
+      addressLine1: addressLine1 || '',
+      addressLine2: addressLine2 || '',
+      city: city || '',
+      state: state || '',
+      postalCode: postalCode || '',
+      country: country || 'India',
+      createdAt
+    })
+    setOtpSent(false)
+    setTempEmail('')
+  }
+
+  const refreshCurrentUser = async (fallbackUser = null, tokenOverride = null) => {
+    const activeToken = tokenOverride || token
+
+    if (!activeToken) {
+      if (fallbackUser) {
+        setUser(fallbackUser)
+        return fallbackUser
       }
-      setLoading(false);
-    };
 
-    initAuth();
-  }, [token]);
+      return null
+    }
+
+    try {
+      const response = await axiosInstance.get('/users/me', {
+        headers: {
+          Authorization: `Bearer ${activeToken}`
+        }
+      })
+      setUser(response.data)
+      return response.data
+    } catch (error) {
+      if (fallbackUser) {
+        setUser(fallbackUser)
+        return fallbackUser
+      }
+
+      throw error
+    }
+  }
+
+  useEffect(() => {
+    const initAuth = async () => {
+      if (!token) {
+        setLoading(false)
+        return
+      }
+
+      const parsedUser = parseStoredToken(token)
+
+      if (!parsedUser) {
+        clearAuthState()
+        setLoading(false)
+        return
+      }
+
+      setUser(parsedUser)
+
+      try {
+        await refreshCurrentUser(parsedUser)
+      } catch (error) {
+        console.error('Unable to refresh current user:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    initAuth()
+  }, [token])
 
   const sendOtp = async (email, purpose = 'login') => {
     try {
-      const response = await axios.post('http://localhost:8080/api/auth/send-otp', {
-        email: email,
-        purpose: purpose
-      });
-      
-      setTempEmail(email);
-      setOtpSent(true);
-      
+      const response = await axios.post(`${API_BASE_URL}/auth/send-otp`, {
+        email,
+        purpose
+      })
+
+      setTempEmail(email)
+      setOtpSent(true)
+
       return {
         success: true,
         message: response.data.message,
         isExistingUser: response.data.isExistingUser === 'true'
-      };
+      }
     } catch (error) {
-      console.error('Send OTP error:', error);
-      throw new Error(error.response?.data?.message || 'Failed to send OTP');
+      console.error('Send OTP error:', error)
+      throw new Error(error.response?.data?.message || 'Failed to send OTP')
     }
-  };
+  }
 
   const verifyAndRegister = async (email, otp, name = null, contactNumber = '') => {
     try {
-      const response = await axios.post('http://localhost:8080/api/auth/verify-register', {
-        email: email,
-        otp: otp,
-        name: name,
-        contactNumber: contactNumber
-      });
+      const response = await axios.post(`${API_BASE_URL}/auth/verify-register`, {
+        email,
+        otp,
+        name,
+        contactNumber
+      })
 
-      const { token, email: userEmail, name: userName, id, role, message } = response.data;
-
-      // Save token and user data
-      localStorage.setItem('token', token);
-      setToken(token);
-      setUser({
-        email: userEmail,
-        name: userName,
-        id: id,
-        role: role
-      });
-      setOtpSent(false);
-      setTempEmail('');
+      applyAuthResponse(response.data)
+      await refreshCurrentUser(response.data, response.data.token)
 
       return {
         success: true,
-        message: message,
+        message: response.data.message,
         isNewUser: Boolean(name)
-      };
+      }
     } catch (error) {
-      console.error('Verify OTP error:', error);
-      throw new Error(error.response?.data?.message || 'Verification failed');
+      console.error('Verify OTP error:', error)
+      throw new Error(error.response?.data?.message || 'Verification failed')
     }
-  };
+  }
 
   const verifyLogin = async (email, otp) => {
     try {
-      const response = await axios.post('http://localhost:8080/api/auth/verify-login', {
-        email: email,
-        otp: otp
-      });
+      const response = await axios.post(`${API_BASE_URL}/auth/verify-login`, {
+        email,
+        otp
+      })
 
-      const { token, email: userEmail, name, id, role, message } = response.data;
-
-      localStorage.setItem('token', token);
-      setToken(token);
-      setUser({
-        email: userEmail,
-        name: name,
-        id: id,
-        role: role
-      });
-      setOtpSent(false);
-      setTempEmail('');
+      applyAuthResponse(response.data)
+      await refreshCurrentUser(response.data, response.data.token)
 
       return {
         success: true,
-        message: message
-      };
+        message: response.data.message
+      }
     } catch (error) {
-      console.error('Login error:', error);
-      throw new Error(error.response?.data?.message || 'Login failed');
+      console.error('Login error:', error)
+      throw new Error(error.response?.data?.message || 'Login failed')
     }
-  };
+  }
 
   const login = async (credentials) => {
     try {
-      const response = await axios.post('http://localhost:8080/api/users/login', {
+      const response = await axios.post(`${API_BASE_URL}/auth/password-login`, {
         email: credentials.email,
         password: credentials.password
-      });
+      })
 
-      if (response.data === "Login successful") {
-        const userResponse = await axios.get(`http://localhost:8080/api/users?email=${credentials.email}`);
-        const userData = userResponse.data.find(u => u.email === credentials.email);
+      applyAuthResponse(response.data)
+      await refreshCurrentUser(response.data, response.data.token)
 
-        if (!userData) {
-          throw new Error('User details not found');
-        }
-
-        const mockToken = btoa(JSON.stringify({ 
-          email: userData.email, 
-          name: userData.name,
-          id: userData.id,
-          role: userData.role || 'CUSTOMER'
-        }));
-        
-        localStorage.setItem('token', mockToken);
-        setToken(mockToken);
-        setUser({
-          email: userData.email,
-          name: userData.name,
-          id: userData.id,
-          role: userData.role || 'CUSTOMER'
-        });
-
-        return { success: true };
-      }
-
-      throw new Error('Login failed');
+      return { success: true }
     } catch (error) {
-      console.error('Login error:', error);
-      throw new Error(error.response?.data?.message || error.message || 'Login failed');
+      console.error('Password login error:', error)
+      throw new Error(error.response?.data?.message || error.message || 'Login failed')
     }
-  };
+  }
 
   const register = async (userData) => {
     try {
-      const response = await axios.post('http://localhost:8080/api/users/register', {
+      const response = await axios.post(`${API_BASE_URL}/users/register`, {
         name: userData.name,
         email: userData.email,
         password: userData.password,
         contactNumber: userData.contactNumber
-      });
+      })
 
       return {
         success: true,
         user: response.data
-      };
+      }
     } catch (error) {
-      console.error('Register error:', error);
-      throw new Error(error.response?.data?.message || 'Registration failed');
+      console.error('Register error:', error)
+      throw new Error(error.response?.data?.message || 'Registration failed')
     }
-  };
+  }
+
+  const updateProfile = async (payload) => {
+    try {
+      const response = await axiosInstance.put('/users/me', payload)
+      setUser(response.data)
+      return response.data
+    } catch (error) {
+      console.error('Update profile error:', error)
+      throw new Error(error.response?.data?.message || 'Failed to update profile')
+    }
+  }
 
   const logout = () => {
-    clearAuthState();
-  };
+    clearAuthState()
+  }
 
   const checkOtpStatus = async (email) => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/auth/otp-status/${email}`);
-      return response.data;
+      const response = await axios.get(`${API_BASE_URL}/auth/otp-status/${email}`)
+      return response.data
     } catch (error) {
-      console.error('Check OTP status error:', error);
-      throw new Error('Failed to check OTP status');
+      console.error('Check OTP status error:', error)
+      throw new Error('Failed to check OTP status')
     }
-  };
+  }
 
   const value = {
     user,
@@ -268,15 +315,17 @@ export const AuthProvider = ({ children }) => {
     logout,
     checkOtpStatus,
     axiosInstance,
+    refreshCurrentUser,
+    updateProfile,
     isAuthenticated: !!user,
     isAdmin: user?.role === 'ADMIN'
-  };
+  }
 
   return (
     <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
-  );
-};
+  )
+}
 
-export default AuthProvider;
+export default AuthProvider

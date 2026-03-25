@@ -16,6 +16,8 @@ public class Cart {
     private Long productId;
     private Integer quantity;
     private Double price;
+    private String selectedSize;
+    private String selectedColor;
     
     @Transient
     private String productName;
@@ -34,4 +36,7 @@ public class Cart {
 
     @Transient
     private List<String> productSizes;
+
+    @Transient
+    private List<String> productColors;
 }

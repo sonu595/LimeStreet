@@ -44,6 +44,12 @@ public class ProductController {
         return repo.findAll();
     }
 
+    @GetMapping("/{id}")
+    public Product getById(@PathVariable Long id) {
+        return repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+    }
+
     @GetMapping("/new-arrivals")
     public List<Product> newArrivals() {
         return repo.findByNewArrivalTrueOrderByIdDesc();

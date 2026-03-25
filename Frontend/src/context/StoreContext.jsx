@@ -18,7 +18,10 @@ export const StoreProvider = ({ children }) => {
   const { isAuthenticated, token, axiosInstance, user } = useAuth()
   const [cartItems, setCartItems] = useState([])
   const [wishlistItems, setWishlistItems] = useState([])
+  const [orders, setOrders] = useState([])
+  const [ordersError, setOrdersError] = useState('')
   const [storeLoading, setStoreLoading] = useState(false)
+  const [placingOrder, setPlacingOrder] = useState(false)
 
   const getUserStorageKey = (type) => {
     const identifier = user?.id || user?.email || 'guest'
@@ -42,6 +45,8 @@ export const StoreProvider = ({ children }) => {
   const resetStore = () => {
     setCartItems([])
     setWishlistItems([])
+    setOrders([])
+    setOrdersError('')
   }
 
   const fetchCart = async () => {
@@ -82,6 +87,27 @@ export const StoreProvider = ({ children }) => {
     }
   }
 
+  const fetchOrders = async () => {
+    if (!isAuthenticated || !token) {
+      setOrders([])
+      setOrdersError('')
+      return []
+    }
+
+    try {
+      const response = await axiosInstance.get('/orders/my')
+      const nextOrders = Array.isArray(response.data) ? response.data : []
+      setOrders(nextOrders)
+      setOrdersError('')
+      return nextOrders
+    } catch (error) {
+      console.log(error)
+      setOrders([])
+      setOrdersError(error.response?.data?.message || 'Unable to load your orders right now.')
+      return []
+    }
+  }
+
   const refreshStore = async () => {
     if (!isAuthenticated || !token) {
       resetStore()
@@ -91,7 +117,7 @@ export const StoreProvider = ({ children }) => {
     setStoreLoading(true)
 
     try {
-      await Promise.all([fetchCart(), fetchWishlist()])
+      await Promise.all([fetchCart(), fetchWishlist(), fetchOrders()])
     } finally {
       setStoreLoading(false)
     }
@@ -110,10 +136,12 @@ export const StoreProvider = ({ children }) => {
       ? { ...productOrId, id: productOrId.productId || productOrId.id }
       : { id: productOrId }
 
-  const createLocalCartItem = (product, quantity) => ({
-    id: `local-cart-${product.id}`,
+  const createLocalCartItem = (product, quantity, options = {}) => ({
+    id: `local-cart-${product.id}-${options.selectedSize || 'default'}-${options.selectedColor || 'default'}`,
     productId: product.id,
     quantity,
+    selectedSize: options.selectedSize || product.sizes?.[0] || '',
+    selectedColor: options.selectedColor || product.colors?.[0] || '',
     productName: product.name || 'Product',
     productImage: product.imageUrls?.[0] || product.imageUrl || '',
     productCategory: product.category || 'Product',
@@ -124,7 +152,8 @@ export const StoreProvider = ({ children }) => {
       ? product.sizes
       : product.size
         ? product.size.split(',').map((item) => item.trim()).filter(Boolean)
-        : []
+        : [],
+    productColors: product.colors?.length ? product.colors : []
   })
 
   const createLocalWishlistItem = (product) => ({
@@ -135,29 +164,43 @@ export const StoreProvider = ({ children }) => {
     productCategory: product.category || 'Product',
     price: Number(product.price || 0),
     originalPrice: product.originalPrice ? Number(product.originalPrice) : null,
-    discountPercentage: product.discountPercentage || null
+    discountPercentage: product.discountPercentage || null,
+    productSizes: product.sizes?.length
+      ? product.sizes
+      : product.size
+        ? product.size.split(',').map((item) => item.trim()).filter(Boolean)
+        : [],
+    productColors: product.colors?.length ? product.colors : []
   })
 
-  const addToCart = async (productOrId, quantity = 1) => {
+  const addToCart = async (productOrId, quantity = 1, options = {}) => {
     const product = normalizeProductInput(productOrId)
-    const productId = product.id
+    const payload = {
+      productId: product.id,
+      quantity,
+      selectedSize: options.selectedSize || product.sizes?.[0] || '',
+      selectedColor: options.selectedColor || product.colors?.[0] || ''
+    }
+
     try {
-      const response = await axiosInstance.post('/cart', { productId, quantity })
+      const response = await axiosInstance.post('/cart', payload)
       await fetchCart()
       return response.data
     } catch (error) {
       const existingItems = readLocalItems('cart')
-      const existingItem = existingItems.find((item) => item.productId === productId)
+      const existingItem = existingItems.find((item) =>
+        item.productId === product.id &&
+        item.selectedSize === payload.selectedSize &&
+        item.selectedColor === payload.selectedColor
+      )
+
       const updatedItems = existingItem
         ? existingItems.map((item) =>
-            item.productId === productId
+            item.id === existingItem.id
               ? { ...item, quantity: (item.quantity || 0) + quantity }
               : item
           )
-        : [
-            createLocalCartItem(product, quantity),
-            ...existingItems
-          ]
+        : [createLocalCartItem(product, quantity, payload), ...existingItems]
 
       writeLocalItems('cart', updatedItems)
       setCartItems(updatedItems)
@@ -165,19 +208,19 @@ export const StoreProvider = ({ children }) => {
     }
   }
 
-  const updateCartQuantity = async (productId, quantity) => {
+  const updateCartQuantity = async (cartItemId, quantity) => {
     if (quantity <= 0) {
-      await removeFromCart(productId)
+      await removeFromCart(cartItemId)
       return null
     }
 
     try {
-      const response = await axiosInstance.put(`/cart/${productId}`, { quantity })
+      const response = await axiosInstance.put(`/cart/${cartItemId}`, { quantity })
       await fetchCart()
       return response.data
     } catch (error) {
       const updatedItems = readLocalItems('cart').map((item) =>
-        item.productId === productId ? { ...item, quantity } : item
+        item.id === cartItemId ? { ...item, quantity } : item
       )
       writeLocalItems('cart', updatedItems)
       setCartItems(updatedItems)
@@ -185,12 +228,12 @@ export const StoreProvider = ({ children }) => {
     }
   }
 
-  const removeFromCart = async (productId) => {
+  const removeFromCart = async (cartItemId) => {
     try {
-      await axiosInstance.delete(`/cart/${productId}`)
+      await axiosInstance.delete(`/cart/${cartItemId}`)
       await fetchCart()
     } catch (error) {
-      const updatedItems = readLocalItems('cart').filter((item) => item.productId !== productId)
+      const updatedItems = readLocalItems('cart').filter((item) => item.id !== cartItemId)
       writeLocalItems('cart', updatedItems)
       setCartItems(updatedItems)
     }
@@ -206,12 +249,46 @@ export const StoreProvider = ({ children }) => {
     }
   }
 
+  const placeOrder = async () => {
+    setPlacingOrder(true)
+
+    try {
+      const response = await axiosInstance.post('/orders/checkout')
+      await Promise.all([fetchCart(), fetchOrders()])
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to place order')
+    } finally {
+      setPlacingOrder(false)
+    }
+  }
+
+  const buyNowOrder = async ({ productId, quantity = 1, selectedSize = '', selectedColor = '' }) => {
+    setPlacingOrder(true)
+
+    try {
+      const response = await axiosInstance.post('/orders/buy-now', {
+        productId,
+        quantity,
+        selectedSize,
+        selectedColor
+      })
+      await fetchOrders()
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to place order')
+    } finally {
+      setPlacingOrder(false)
+    }
+  }
+
   const isInWishlist = (productId) =>
     wishlistItems.some((item) => item.productId === productId)
 
   const addToWishlist = async (productOrId) => {
     const product = normalizeProductInput(productOrId)
     const productId = product.id
+
     try {
       const response = await axiosInstance.post('/wishlist', { productId })
       await fetchWishlist()
@@ -220,10 +297,7 @@ export const StoreProvider = ({ children }) => {
       const existingItems = readLocalItems('wishlist')
 
       if (!existingItems.some((item) => item.productId === productId)) {
-        const updatedItems = [
-          createLocalWishlistItem(product),
-          ...existingItems
-        ]
+        const updatedItems = [createLocalWishlistItem(product), ...existingItems]
         writeLocalItems('wishlist', updatedItems)
         setWishlistItems(updatedItems)
       }
@@ -246,6 +320,7 @@ export const StoreProvider = ({ children }) => {
   const toggleWishlist = async (productOrId) => {
     const product = normalizeProductInput(productOrId)
     const productId = product.id
+
     if (isInWishlist(productId)) {
       await removeFromWishlist(productId)
       return false
@@ -255,10 +330,10 @@ export const StoreProvider = ({ children }) => {
     return true
   }
 
-  const moveWishlistToCart = async (productOrId) => {
+  const moveWishlistToCart = async (productOrId, options = {}) => {
     const product = normalizeProductInput(productOrId)
     const productId = product.id
-    await addToCart(product, 1)
+    await addToCart(product, 1, options)
     await removeFromWishlist(productId)
   }
 
@@ -271,17 +346,23 @@ export const StoreProvider = ({ children }) => {
       value={{
         cartItems,
         wishlistItems,
+        orders,
+        ordersError,
         cartCount,
         wishlistCount,
         cartSubtotal,
         storeLoading,
+        placingOrder,
         fetchCart,
         fetchWishlist,
+        fetchOrders,
         refreshStore,
         addToCart,
         updateCartQuantity,
         removeFromCart,
         clearCart,
+        placeOrder,
+        buyNowOrder,
         addToWishlist,
         removeFromWishlist,
         toggleWishlist,
