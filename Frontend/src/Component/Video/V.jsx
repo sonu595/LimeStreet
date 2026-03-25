@@ -44,7 +44,7 @@ const V = () => {
         </div>
         
         {/* Main Brand Name with Elegant Typography */}
-        <h1 className='font-light tracking-[0.2em] text-6xl md:text-8xl lg:text-9xl uppercase opacity-0 animate-[fadeInUp_0.8s_ease-out_0.1s_forwards]'>
+        <h1 className='font-light tracking-[0.2em] text-5xl md:text-8xl lg:text-9xl uppercase opacity-0 animate-[fadeInUp_0.8s_ease-out_0.1s_forwards]'>
           <span className='font-bold tracking-wider'>Lime</span>
           <span className='font-thin'>Street</span>
         </h1>

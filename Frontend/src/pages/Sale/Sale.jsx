@@ -30,7 +30,7 @@ const Sale = () => {
           <div className="mt-8 flex items-center justify-center gap-4 text-gray-300">
             <BadgePercent className="h-8 w-8 text-white" />
             <p className="max-w-xl text-sm leading-7 md:text-base">
-              Sirf discounted products yahan arranged hain, taaki sale collection alag aur easy-to-browse rahe.
+              Discover your perfect fit with designs that speak your vibe — now on sale. Limited time, unlimited style.
             </p>
           </div>
         </div>

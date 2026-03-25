@@ -50,7 +50,7 @@ const WishListPage = () => {
             {wishlistItems.map((item) => (
               <article
                 key={`${item.id}-${item.productId}`}
-                className="overflow-hidden rounded-[24px] border border-white/10 bg-zinc-950"
+                className="overflow-hidden rounded-3xl border border-white/10 bg-zinc-950"
               >
                 <div className="relative h-44 overflow-hidden bg-black sm:h-52">
                   <img

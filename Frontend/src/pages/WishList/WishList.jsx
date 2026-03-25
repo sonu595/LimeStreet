@@ -60,7 +60,7 @@ const WishList = () => {
                 {wishlistItems.map((item) => (
                   <div
                     key={`${item.id}-${item.productId}`}
-                    className="w-64 flex-shrink-0 bg-zinc-950 rounded-2xl border border-white/10 overflow-hidden"
+                    className="w-64 shrink-0 bg-zinc-950 rounded-2xl border border-white/10 overflow-hidden"
                   >
                     {/* Image */}
                     <div className="relative h-48 bg-black">

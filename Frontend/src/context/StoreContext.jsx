@@ -42,6 +42,8 @@ export const StoreProvider = ({ children }) => {
     localStorage.setItem(getUserStorageKey(type), JSON.stringify(items))
   }
 
+  const isServerSession = Boolean(isAuthenticated && token)
+
   const resetStore = () => {
     setCartItems([])
     setWishlistItems([])
@@ -50,7 +52,7 @@ export const StoreProvider = ({ children }) => {
   }
 
   const fetchCart = async () => {
-    if (!isAuthenticated || !token) {
+    if (!isServerSession) {
       setCartItems([])
       return []
     }
@@ -62,14 +64,13 @@ export const StoreProvider = ({ children }) => {
       writeLocalItems('cart', items)
       return items
     } catch (error) {
-      const items = readLocalItems('cart')
-      setCartItems(items)
-      return items
+      console.log(error)
+      return []
     }
   }
 
   const fetchWishlist = async () => {
-    if (!isAuthenticated || !token) {
+    if (!isServerSession) {
       setWishlistItems([])
       return []
     }
@@ -81,14 +82,13 @@ export const StoreProvider = ({ children }) => {
       writeLocalItems('wishlist', items)
       return items
     } catch (error) {
-      const items = readLocalItems('wishlist')
-      setWishlistItems(items)
-      return items
+      console.log(error)
+      return []
     }
   }
 
   const fetchOrders = async () => {
-    if (!isAuthenticated || !token) {
+    if (!isServerSession) {
       setOrders([])
       setOrdersError('')
       return []
@@ -109,7 +109,7 @@ export const StoreProvider = ({ children }) => {
   }
 
   const refreshStore = async () => {
-    if (!isAuthenticated || !token) {
+    if (!isServerSession) {
       resetStore()
       return
     }
@@ -124,12 +124,12 @@ export const StoreProvider = ({ children }) => {
   }
 
   useEffect(() => {
-    if (isAuthenticated && token) {
+    if (isServerSession) {
       refreshStore()
     } else {
       resetStore()
     }
-  }, [isAuthenticated, token])
+  }, [isServerSession])
 
   const normalizeProductInput = (productOrId) =>
     typeof productOrId === 'object' && productOrId !== null
@@ -187,6 +187,12 @@ export const StoreProvider = ({ children }) => {
       await fetchCart()
       return response.data
     } catch (error) {
+      if (isServerSession) {
+        console.log(error)
+        await fetchCart()
+        return null
+      }
+
       const existingItems = readLocalItems('cart')
       const existingItem = existingItems.find((item) =>
         item.productId === product.id &&
@@ -219,6 +225,12 @@ export const StoreProvider = ({ children }) => {
       await fetchCart()
       return response.data
     } catch (error) {
+      if (isServerSession) {
+        console.log(error)
+        await fetchCart()
+        return null
+      }
+
       const updatedItems = readLocalItems('cart').map((item) =>
         item.id === cartItemId ? { ...item, quantity } : item
       )
@@ -233,6 +245,12 @@ export const StoreProvider = ({ children }) => {
       await axiosInstance.delete(`/cart/${cartItemId}`)
       await fetchCart()
     } catch (error) {
+      if (isServerSession) {
+        console.log(error)
+        await fetchCart()
+        return
+      }
+
       const updatedItems = readLocalItems('cart').filter((item) => item.id !== cartItemId)
       writeLocalItems('cart', updatedItems)
       setCartItems(updatedItems)
@@ -244,6 +262,12 @@ export const StoreProvider = ({ children }) => {
       await axiosInstance.delete('/cart')
       await fetchCart()
     } catch (error) {
+      if (isServerSession) {
+        console.log(error)
+        await fetchCart()
+        return
+      }
+
       writeLocalItems('cart', [])
       setCartItems([])
     }
@@ -295,6 +319,12 @@ export const StoreProvider = ({ children }) => {
       await fetchWishlist()
       return response.data
     } catch (error) {
+      if (isServerSession) {
+        console.log(error)
+        await fetchWishlist()
+        return null
+      }
+
       const existingItems = readLocalItems('wishlist')
 
       if (!existingItems.some((item) => item.productId === productId)) {
@@ -312,6 +342,12 @@ export const StoreProvider = ({ children }) => {
       await axiosInstance.delete(`/wishlist/${productId}`)
       await fetchWishlist()
     } catch (error) {
+      if (isServerSession) {
+        console.log(error)
+        await fetchWishlist()
+        return
+      }
+
       const updatedItems = readLocalItems('wishlist').filter((item) => item.productId !== productId)
       writeLocalItems('wishlist', updatedItems)
       setWishlistItems(updatedItems)

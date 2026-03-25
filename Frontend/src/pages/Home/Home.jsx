@@ -8,7 +8,7 @@ const Home = () => {
   return (
     <div className="bg-black pb-24 md:pb-0">
       <V />
-      <div className='px-4 md:px-8 lg:px-16 py-8 md:py-12 bg-black'>
+      <div className='bg-black px-4 py-4 md:px-8 md:py-12 lg:px-16'>
         <Line/>
       </div>
       <Hero/>

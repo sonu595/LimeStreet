@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
+import React, { useEffect, useMemo, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Heart, ShoppingBag } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../../context/StoreContext'
@@ -11,7 +11,13 @@ const Card = ({ product }) => {
   const { addToCart, toggleWishlist, isInWishlist } = useStore()
 
   const currentProduct = product || {}
-  const productImage = currentProduct.imageUrls?.[0] || currentProduct.imageUrl
+  const productImages = useMemo(() => {
+    const mergedImages = [...(currentProduct.imageUrls || []), currentProduct.imageUrl]
+      .filter(Boolean)
+      .map((image) => image.trim())
+
+    return Array.from(new Set(mergedImages)).slice(0, 4)
+  }, [currentProduct.id, currentProduct.imageUrl, currentProduct.imageUrls])
   const sizes = currentProduct.sizes?.length
     ? currentProduct.sizes
     : currentProduct.size
@@ -20,11 +26,33 @@ const Card = ({ product }) => {
   const colors = currentProduct.colors?.length ? currentProduct.colors : []
   const [selectedSize, setSelectedSize] = useState(sizes[0] || '')
   const [selectedColor, setSelectedColor] = useState(colors[0] || '')
+  const [isDesktopHovering, setIsDesktopHovering] = useState(false)
+  const [activeImageIndex, setActiveImageIndex] = useState(0)
+  const [slideDirection, setSlideDirection] = useState(1)
 
   useEffect(() => {
     setSelectedSize(sizes[0] || '')
     setSelectedColor(colors[0] || '')
+    setActiveImageIndex(0)
+    setIsDesktopHovering(false)
   }, [currentProduct.id])
+
+  useEffect(() => {
+    if (!isDesktopHovering || productImages.length <= 1) {
+      return undefined
+    }
+
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      return undefined
+    }
+
+    const intervalId = window.setInterval(() => {
+      setSlideDirection(1)
+      setActiveImageIndex((currentIndex) => (currentIndex + 1) % productImages.length)
+    }, 2000)
+
+    return () => window.clearInterval(intervalId)
+  }, [isDesktopHovering, productImages.length])
 
   if (!product) return null
 
@@ -67,17 +95,31 @@ const Card = ({ product }) => {
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -6 }}
       transition={{ duration: 0.25 }}
-      className="group mx-auto flex h-full w-full max-w-full flex-col overflow-hidden rounded-[24px] border border-white/10 bg-zinc-950 shadow-[0_20px_50px_rgba(0,0,0,0.35)] sm:max-w-[320px]"
+      className="group mx-auto flex h-full w-full max-w-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-zinc-950 shadow-[0_20px_50px_rgba(0,0,0,0.35)] sm:max-w-[320px]"
+      onMouseEnter={() => setIsDesktopHovering(true)}
+      onMouseLeave={() => {
+        setIsDesktopHovering(false)
+        setSlideDirection(-1)
+        setActiveImageIndex(0)
+      }}
     >
       <div
         onClick={() => navigate(`/product/${currentProduct.id}`)}
-        className="relative h-[300px] overflow-hidden bg-black sm:h-[260px]"
+        className="relative h-75 overflow-hidden bg-black sm:h-65"
       >
-        <img
-          src={productImage}
-          alt={product.name}
-          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-        />
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.img
+            key={productImages[activeImageIndex] || 'fallback-image'}
+            src={productImages[activeImageIndex] || currentProduct.imageUrl}
+            alt={product.name}
+            initial={{ opacity: 0, x: slideDirection > 0 ? 28 : -28, scale: 1.02 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: slideDirection > 0 ? -28 : 28, scale: 0.98 }}
+            transition={{ duration: 0.45, ease: 'easeOut' }}
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+          />
+        </AnimatePresence>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-black/70 via-black/10 to-transparent" />
         <div className="absolute left-3 top-3 flex items-center gap-2">
           {product.newArrival && (
             <span className="rounded-full border border-white/15 bg-black/70 px-2 py-1 text-[10px] tracking-[0.2em] text-white">
@@ -102,6 +144,30 @@ const Card = ({ product }) => {
             color={liked ? '#ef4444' : 'white'}
           />
         </button>
+        {productImages.length > 1 && (
+          <>
+            <div className="absolute bottom-3 left-3 hidden items-center gap-1.5 md:flex">
+              {productImages.map((image, index) => (
+                <button
+                  key={`${image}-${index}`}
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    setSlideDirection(index >= activeImageIndex ? 1 : -1)
+                    setActiveImageIndex(index)
+                  }}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    index === activeImageIndex ? 'w-8 bg-white' : 'w-3 bg-white/35'
+                  }`}
+                  aria-label={`Show image ${index + 1}`}
+                />
+              ))}
+            </div>
+            {/* <div className="pointer-events-none absolute bottom-3 right-3 hidden rounded-full border border-white/10 bg-black/55 px-2.5 py-1 text-[10px] uppercase tracking-[0.22em] text-white/80 md:block">
+              Hover view
+            </div> */}
+          </>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-3.5 sm:p-4">
@@ -131,7 +197,7 @@ const Card = ({ product }) => {
           </button>
         </div>
 
-        {sizes.length > 0 && (
+        {/* {sizes.length > 0 && (
           <div className="space-y-1.5">
             <p className="text-[10px] uppercase tracking-[0.18em] text-zinc-500">Size</p>
             <div className="flex flex-wrap gap-1.5">
@@ -149,9 +215,9 @@ const Card = ({ product }) => {
               ))}
             </div>
           </div>
-        )}
+        )} */}
 
-        {colors.length > 0 && (
+        {/* {colors.length > 0 && (
           <div className="space-y-1.5">
             <p className="text-[10px] uppercase tracking-[0.18em] text-zinc-500">Color</p>
             <div className="flex flex-wrap gap-1.5">
@@ -169,7 +235,7 @@ const Card = ({ product }) => {
               ))}
             </div>
           </div>
-        )}
+        )} */}
 
         <div className="mt-auto flex gap-2 pt-1">
           <button
