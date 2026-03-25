@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class ProductImageStorageService {
+    private static final long MAX_FILE_SIZE = 8L * 1024 * 1024;
 
     private final Path productUploadPath;
 
@@ -30,6 +31,14 @@ public class ProductImageStorageService {
         for (MultipartFile file : files) {
             if (file == null || file.isEmpty()) {
                 continue;
+            }
+
+            if (file.getContentType() == null || !file.getContentType().startsWith("image/")) {
+                throw new RuntimeException("Only image files can be uploaded.");
+            }
+
+            if (file.getSize() > MAX_FILE_SIZE) {
+                throw new RuntimeException("Each image must be 8MB or smaller.");
             }
 
             String originalName = file.getOriginalFilename() == null ? "image" : file.getOriginalFilename();

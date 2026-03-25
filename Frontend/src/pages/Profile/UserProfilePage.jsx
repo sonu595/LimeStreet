@@ -3,6 +3,7 @@ import { Package, Save, ShoppingBag, User2 } from 'lucide-react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import useAuth from '../../context/useAuth'
 import { useStore } from '../../context/StoreContext'
+import { formatEstimatedDelivery } from '../../utils/orderDelivery'
 
 const formatPrice = (value) => `Rs ${Number(value || 0).toLocaleString('en-IN')}`
 
@@ -234,6 +235,11 @@ const UserProfilePage = () => {
                 <div className="space-y-4">
                   {orders.map((order) => (
                     <article key={order.id} className="rounded-[28px] border border-white/10 bg-black/30 p-4 sm:p-5">
+                      {(() => {
+                        const expectedDeliveryLabel = formatEstimatedDelivery(order)
+
+                        return (
+                          <>
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
                           <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">Order #{order.id}</p>
@@ -259,11 +265,14 @@ const UserProfilePage = () => {
                       </div>
 
                       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/8 pt-4">
-                        <div className="text-sm text-zinc-400">Delivery address: {order.addressLine1}, {order.city}, {order.state} {order.postalCode}</div>
+                        <div className="text-sm text-zinc-400">Delivery address: {order.addressLine1}, {order.city}, {order.state} {order.postalCode}{expectedDeliveryLabel ? ` • Aapka product ${expectedDeliveryLabel} tak aa jayega.` : ''}</div>
                         <div className="text-base font-semibold text-white">{formatPrice(order.totalAmount)}</div>
                       </div>
 
                       {order.adminNote && <p className="mt-3 rounded-2xl border border-white/8 bg-zinc-950 px-4 py-3 text-sm text-zinc-300">{order.adminNote}</p>}
+                          </>
+                        )
+                      })()}
                     </article>
                   ))}
                 </div>

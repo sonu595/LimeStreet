@@ -249,11 +249,11 @@ export const StoreProvider = ({ children }) => {
     }
   }
 
-  const placeOrder = async () => {
+  const placeOrder = async (deliveryDetails = null) => {
     setPlacingOrder(true)
 
     try {
-      const response = await axiosInstance.post('/orders/checkout')
+      const response = await axiosInstance.post('/orders/checkout', deliveryDetails || {})
       await Promise.all([fetchCart(), fetchOrders()])
       return response.data
     } catch (error) {
@@ -263,7 +263,7 @@ export const StoreProvider = ({ children }) => {
     }
   }
 
-  const buyNowOrder = async ({ productId, quantity = 1, selectedSize = '', selectedColor = '' }) => {
+  const buyNowOrder = async ({ productId, quantity = 1, selectedSize = '', selectedColor = '', deliveryDetails = null }) => {
     setPlacingOrder(true)
 
     try {
@@ -271,7 +271,8 @@ export const StoreProvider = ({ children }) => {
         productId,
         quantity,
         selectedSize,
-        selectedColor
+        selectedColor,
+        ...(deliveryDetails || {})
       })
       await fetchOrders()
       return response.data

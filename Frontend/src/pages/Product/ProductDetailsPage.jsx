@@ -3,6 +3,8 @@ import axios from 'axios'
 import { Heart, ShoppingBag } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useStore } from '../../context/StoreContext'
+import { getStartingPrice, getVariantPrice } from '../../utils/productPricing'
+import { buildApiUrl } from '../../utils/api'
 
 const formatPrice = (value) => `Rs ${Number(value || 0).toLocaleString('en-IN')}`
 
@@ -17,7 +19,7 @@ const ProductDetailsPage = () => {
   const [busy, setBusy] = useState('')
 
   useEffect(() => {
-    axios.get(`http://localhost:8080/api/products/${id}`)
+    axios.get(buildApiUrl(`/products/${id}`))
       .then((response) => {
         const nextProduct = response.data
         setProduct(nextProduct)
@@ -36,6 +38,8 @@ const ProductDetailsPage = () => {
   }
 
   const liked = isInWishlist(product.id)
+  const activePrice = getVariantPrice(product, selectedSize, selectedColor)
+  const startingPrice = getStartingPrice(product)
 
   const handleAddToCart = async () => {
     setBusy('cart')
@@ -61,15 +65,18 @@ const ProductDetailsPage = () => {
           <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">{product.category}</p>
           <h1 className="mt-2 text-2xl font-semibold text-white md:text-3xl">{product.name}</h1>
           <div className="mt-4 flex items-end gap-3">
-            <p className="text-2xl font-semibold text-white">{formatPrice(product.price)}</p>
+            <p className="text-2xl font-semibold text-white">{formatPrice(activePrice)}</p>
             {product.originalPrice && <p className="text-sm text-zinc-500 line-through">{formatPrice(product.originalPrice)}</p>}
           </div>
+          {startingPrice !== activePrice && (
+            <p className="mt-1 text-xs text-zinc-500">Starting price {formatPrice(startingPrice)}</p>
+          )}
 
           <p className="mt-5 text-sm leading-7 text-zinc-300">{product.description}</p>
 
           {!!product.sizes?.length && (
             <div className="mt-6">
-              <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">Select size</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">Select size and check price</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {product.sizes.map((size) => (
                   <button key={size} type="button" onClick={() => setSelectedSize(size)} className={`rounded-full border px-3 py-2 text-xs transition ${selectedSize === size ? 'border-white bg-white text-black' : 'border-white/10 text-zinc-400 hover:text-white'}`}>
@@ -92,6 +99,15 @@ const ProductDetailsPage = () => {
               </div>
             </div>
           )}
+
+          <div className="mt-6 rounded-[24px] border border-white/8 bg-black/30 p-4">
+            <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">Selected variant</p>
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-zinc-300">
+              <span className="rounded-full border border-white/10 px-3 py-1.5">{selectedSize || 'Default size'}</span>
+              <span className="rounded-full border border-white/10 px-3 py-1.5">{selectedColor || 'Default color'}</span>
+              <span className="rounded-full bg-white px-3 py-1.5 text-black">{formatPrice(activePrice)}</span>
+            </div>
+          </div>
 
           <div className="mt-8 flex flex-wrap gap-3">
             <button type="button" onClick={handleAddToCart} disabled={busy === 'cart'} className="inline-flex items-center gap-2 rounded-2xl border border-white/12 px-5 py-3 text-sm font-medium text-white transition hover:bg-white/8">

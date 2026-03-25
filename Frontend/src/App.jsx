@@ -4,6 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 import useAuth from './context/useAuth';
 import Nav from './Component/Navbar/Nav';
 import MobileBottomNav from './Component/Navbar/MobileBottomNav';
+import Footer from './Component/Layout/Footer';
 import Home from './pages/Home/Home';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
@@ -13,9 +14,10 @@ import SimpleProfilePage from './pages/Profile/SimpleProfilePage';
 import OrdersPage from './pages/Orders/OrdersPage';
 import ProductDetailsPage from './pages/Product/ProductDetailsPage';
 import BuyNowPage from './pages/Buy/BuyNowPage';
+import OrderSuccessPage from './pages/OrderSuccess/OrderSuccessPage';
 import Arrivel from './pages/New/Arrivel';
 import Sale from './pages/Sale/Sale';
-import AdminConsole from './pages/Admin/AdminConsole';
+import AdminConsole from './pages/Admin/AdminConsoleNext';
 import LimeStreetLoader from './Component/Layout/LimeStreetLoader'; // Import loader
 
 const ProtectedRoute = ({ children }) => {
@@ -89,6 +91,7 @@ const StoreLayout = ({ children }) => (
   <>
     <Nav />
     {children}
+    <Footer />
     <MobileBottomNav />
   </>
 )
@@ -232,6 +235,15 @@ function App() {
                       <OrdersPage />
                     </StoreLayout>
                   </>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/order-success"
+              element={
+                <ProtectedRoute>
+                  <OrderSuccessPage />
                 </ProtectedRoute>
               }
             />

@@ -37,6 +37,7 @@ public class Order {
     private Double totalAmount;
     private Integer deliveryDays;
     private LocalDate estimatedDeliveryDate;
+    private LocalDateTime estimatedDeliveryAt;
     private LocalDateTime approvedAt;
     private LocalDateTime createdAt;
 

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -82,14 +83,34 @@ public class OrderController {
         }
     }
 
-    private void ensureCompleteProfile(User user) {
-        if (user.getName() == null || user.getName().isBlank()
-                || user.getContactNumber() == null || user.getContactNumber().isBlank()
-                || user.getAddressLine1() == null || user.getAddressLine1().isBlank()
-                || user.getCity() == null || user.getCity().isBlank()
-                || user.getState() == null || user.getState().isBlank()
-                || user.getPostalCode() == null || user.getPostalCode().isBlank()) {
-            throw new RuntimeException("Complete profile with phone number and address is required before placing an order.");
+    private String readOptionalValue(Map<String, Object> request, String key, String fallback) {
+        if (request == null || !request.containsKey(key)) {
+            return fallback;
+        }
+
+        Object value = request.get(key);
+        return value == null ? "" : String.valueOf(value).trim();
+    }
+
+    private void applyOrderDeliveryDetails(Order order, User user, Map<String, Object> request) {
+        order.setCustomerName(readOptionalValue(request, "customerName", user.getName()));
+        order.setContactNumber(readOptionalValue(request, "contactNumber", user.getContactNumber()));
+        order.setAddressLine1(readOptionalValue(request, "addressLine1", user.getAddressLine1()));
+        order.setAddressLine2(readOptionalValue(request, "addressLine2", user.getAddressLine2()));
+        order.setCity(readOptionalValue(request, "city", user.getCity()));
+        order.setState(readOptionalValue(request, "state", user.getState()));
+        order.setPostalCode(readOptionalValue(request, "postalCode", user.getPostalCode()));
+        order.setCountry(readOptionalValue(request, "country", user.getCountry() == null ? "India" : user.getCountry()));
+    }
+
+    private void ensureCompleteProfile(Order order) {
+        if (order.getCustomerName() == null || order.getCustomerName().isBlank()
+                || order.getContactNumber() == null || order.getContactNumber().isBlank()
+                || order.getAddressLine1() == null || order.getAddressLine1().isBlank()
+                || order.getCity() == null || order.getCity().isBlank()
+                || order.getState() == null || order.getState().isBlank()
+                || order.getPostalCode() == null || order.getPostalCode().isBlank()) {
+            throw new RuntimeException("Name, phone number, and complete delivery address are required before placing an order.");
         }
     }
 
@@ -121,10 +142,12 @@ public class OrderController {
         return order;
     }
 
+    @Transactional
     @PostMapping("/checkout")
-    public Order checkout(@RequestHeader("Authorization") String authorizationHeader) {
+    public Order checkout(
+            @RequestHeader("Authorization") String authorizationHeader,
+            @RequestBody(required = false) Map<String, Object> request) {
         User user = getCurrentUser(authorizationHeader);
-        ensureCompleteProfile(user);
 
         List<Cart> cartItems = cartRepository.findByUserIdOrderByIdDesc(user.getId());
 
@@ -133,6 +156,8 @@ public class OrderController {
         }
 
         Order order = createBaseOrder(user);
+        applyOrderDeliveryDetails(order, user, request);
+        ensureCompleteProfile(order);
 
         double subtotal = 0;
 
@@ -141,7 +166,7 @@ public class OrderController {
                     .orElseThrow(() -> new RuntimeException("One of the products in cart is no longer available."));
 
             int quantity = Math.max(cartItem.getQuantity() == null ? 1 : cartItem.getQuantity(), 1);
-            double unitPrice = product.getPrice();
+            double unitPrice = product.resolvePrice(cartItem.getSelectedSize(), cartItem.getSelectedColor());
             double totalPrice = unitPrice * quantity;
             subtotal += totalPrice;
 
@@ -171,7 +196,6 @@ public class OrderController {
             @RequestHeader("Authorization") String authorizationHeader,
             @RequestBody Map<String, Object> request) {
         User user = getCurrentUser(authorizationHeader);
-        ensureCompleteProfile(user);
 
         Long productId = Long.valueOf(String.valueOf(request.get("productId")));
         Integer quantity = request.get("quantity") == null ? 1 : Integer.valueOf(String.valueOf(request.get("quantity")));
@@ -182,8 +206,11 @@ public class OrderController {
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         Order order = createBaseOrder(user);
+        applyOrderDeliveryDetails(order, user, request);
+        ensureCompleteProfile(order);
 
         OrderItem orderItem = new OrderItem();
+        double unitPrice = product.resolvePrice(selectedSize, selectedColor);
         orderItem.setProductId(product.getId());
         orderItem.setProductName(product.getName());
         orderItem.setProductImage(product.getImageUrls() != null && !product.getImageUrls().isEmpty()
@@ -193,8 +220,8 @@ public class OrderController {
         orderItem.setSelectedSize(selectedSize);
         orderItem.setSelectedColor(selectedColor);
         orderItem.setQuantity(Math.max(quantity, 1));
-        orderItem.setUnitPrice(product.getPrice());
-        orderItem.setTotalPrice(product.getPrice() * Math.max(quantity, 1));
+        orderItem.setUnitPrice(unitPrice);
+        orderItem.setTotalPrice(unitPrice * Math.max(quantity, 1));
 
         order.getItems().add(orderItem);
 
@@ -236,17 +263,22 @@ public class OrderController {
         order.setAdminNote(adminNote);
 
         if ("APPROVED".equals(status) || "PROCESSING".equals(status) || "DISPATCHED".equals(status)) {
-            if (deliveryDays != null && deliveryDays >= 0) {
-                order.setEstimatedDeliveryDate(LocalDate.now().plusDays(deliveryDays));
-            }
+            LocalDateTime approvalTimestamp = order.getApprovedAt() == null ? LocalDateTime.now() : order.getApprovedAt();
 
             if (order.getApprovedAt() == null) {
-                order.setApprovedAt(LocalDateTime.now());
+                order.setApprovedAt(approvalTimestamp);
+            }
+
+            if (deliveryDays != null && deliveryDays >= 0) {
+                LocalDateTime estimatedDeliveryAt = approvalTimestamp.plusDays(deliveryDays);
+                order.setEstimatedDeliveryAt(estimatedDeliveryAt);
+                order.setEstimatedDeliveryDate(estimatedDeliveryAt.toLocalDate());
             }
         }
 
         if ("REJECTED".equals(status) || "CANCELLED".equals(status)) {
             order.setEstimatedDeliveryDate(null);
+            order.setEstimatedDeliveryAt(null);
         }
 
         return orderRepository.save(order);

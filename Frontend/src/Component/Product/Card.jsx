@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Heart, ShoppingBag } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../../context/StoreContext'
+import { getStartingPrice, getVariantPrice } from '../../utils/productPricing'
 
 const Card = ({ product }) => {
   const [busyAction, setBusyAction] = useState('')
@@ -27,7 +28,9 @@ const Card = ({ product }) => {
 
   if (!product) return null
 
-  const formattedPrice = Number(product.price || 0).toLocaleString('en-IN')
+  const activePrice = getVariantPrice(product, selectedSize, selectedColor)
+  const startingPrice = getStartingPrice(product)
+  const formattedPrice = Number(activePrice || 0).toLocaleString('en-IN')
   const formattedOriginalPrice = product.originalPrice
     ? Number(product.originalPrice).toLocaleString('en-IN')
     : null
@@ -64,11 +67,11 @@ const Card = ({ product }) => {
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -6 }}
       transition={{ duration: 0.25 }}
-      className="group mx-auto flex h-full w-full max-w-[320px] flex-col overflow-hidden rounded-[24px] border border-white/10 bg-zinc-950 shadow-[0_20px_50px_rgba(0,0,0,0.35)]"
+      className="group mx-auto flex h-full w-full max-w-full flex-col overflow-hidden rounded-[24px] border border-white/10 bg-zinc-950 shadow-[0_20px_50px_rgba(0,0,0,0.35)] sm:max-w-[320px]"
     >
       <div
         onClick={() => navigate(`/product/${currentProduct.id}`)}
-        className="relative h-[240px] overflow-hidden bg-black sm:h-[260px]"
+        className="relative h-[300px] overflow-hidden bg-black sm:h-[260px]"
       >
         <img
           src={productImage}
@@ -110,6 +113,9 @@ const Card = ({ product }) => {
         <div className="flex items-end justify-between gap-3">
           <div>
             <p className="text-base font-semibold text-white sm:text-lg">Rs {formattedPrice}</p>
+            {startingPrice !== activePrice && (
+              <p className="text-[10px] text-zinc-500">From Rs {Number(startingPrice).toLocaleString('en-IN')}</p>
+            )}
             {formattedOriginalPrice && (
               <p className="text-[11px] text-zinc-500 line-through">Rs {formattedOriginalPrice}</p>
             )}

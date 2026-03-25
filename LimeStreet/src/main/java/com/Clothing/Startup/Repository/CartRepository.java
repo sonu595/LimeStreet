@@ -1,11 +1,13 @@
 package com.Clothing.Startup.Repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-
-import com.Clothing.Startup.Model.Cart;
-
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.Clothing.Startup.Model.Cart;
 
 public interface CartRepository extends JpaRepository<Cart, Long> {
     List<Cart> findByUserId(Long userId);
@@ -16,8 +18,14 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
             String selectedSize,
             String selectedColor);
     Optional<Cart> findByIdAndUserId(Long id, Long userId);
+    @Transactional
+    @Modifying
     void deleteByUserIdAndProductId(Long userId, Long productId);
+    @Transactional
+    @Modifying
     void deleteByIdAndUserId(Long id, Long userId);
+    @Transactional
+    @Modifying
     void deleteAllByUserId(Long userId);
     long countByUserId(Long userId);
 }

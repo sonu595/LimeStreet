@@ -2,12 +2,12 @@ package com.Clothing.Startup.Controller;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,7 +28,6 @@ import com.Clothing.Startup.Util.JwtUtil;
 
 @RestController
 @RequestMapping("/api/products")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class ProductController {
     @Autowired
     private ProductRepository repo;
@@ -131,6 +130,20 @@ public class ProductController {
             product.setColors(new ArrayList<>());
         }
 
+        if (product.getVariantPrices() == null) {
+            product.setVariantPrices(new LinkedHashMap<>());
+        } else {
+            product.setVariantPrices(product.getVariantPrices()
+                    .entrySet()
+                    .stream()
+                    .filter(entry -> entry.getKey() != null && !entry.getKey().isBlank() && entry.getValue() != null && entry.getValue() > 0)
+                    .collect(Collectors.toMap(
+                            entry -> entry.getKey().trim().toLowerCase(),
+                            Map.Entry::getValue,
+                            (first, second) -> second,
+                            LinkedHashMap::new)));
+        }
+
         if (product.getNewArrival() == null) {
             product.setNewArrival(false);
         }
@@ -145,6 +158,16 @@ public class ProductController {
 
         if (!product.getSizes().isEmpty()) {
             product.setSize(String.join(", ", product.getSizes()));
+        }
+
+        if (!product.getVariantPrices().isEmpty()) {
+            double lowestVariantPrice = product.getVariantPrices().values()
+                    .stream()
+                    .filter(value -> value != null && value > 0)
+                    .mapToDouble(Double::doubleValue)
+                    .min()
+                    .orElse(product.getPrice());
+            product.setPrice(lowestVariantPrice);
         }
 
         if (product.getOriginalPrice() != null && product.getOriginalPrice() > product.getPrice()) {

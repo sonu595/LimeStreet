@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { BadgePercent } from 'lucide-react'
 import Card from '../../Component/Product/Card'
+import { buildApiUrl } from '../../utils/api'
 
 const Sale = () => {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    axios.get('http://localhost:8080/api/products/sale-items')
+    axios.get(buildApiUrl('/products/sale-items'))
       .then((response) => {
         setProducts(response.data)
       })
@@ -41,7 +42,7 @@ const Sale = () => {
             </div>
           ) : (
             products.length > 0 ? (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:gap-5 xl:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-5 xl:grid-cols-4">
                 {products.map((item) => (
                   <Card key={item.id} product={item} />
                 ))}

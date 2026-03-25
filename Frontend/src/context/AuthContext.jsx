@@ -2,10 +2,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import axios from 'axios'
 import { jwtDecode } from 'jwt-decode'
+import { API_BASE_URL } from '../utils/api'
 
 export const AuthContext = createContext(null)
 
-const API_BASE_URL = 'http://localhost:8080/api'
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL
 })

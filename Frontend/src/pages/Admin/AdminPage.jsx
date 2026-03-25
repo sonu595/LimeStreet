@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 import { FolderKanban, ImagePlus, LayoutDashboard, Package2, Pencil, Shield, Tags, Trash2, Upload, X, Plus, Save, RefreshCw, Ruler, Palette, Layers, Percent, Sparkles } from 'lucide-react'
 import useAuth from '../../context/useAuth'
+import { buildApiUrl } from '../../utils/api'
 
 const CATEGORY_OPTIONS = [
   'Quotes',
@@ -59,7 +60,7 @@ const AdminPage = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true)
-      const response = await axios.get('http://localhost:8080/api/products')
+      const response = await axios.get(buildApiUrl('/products'))
       setProducts(response.data)
     } catch (fetchError) {
       setError('Failed to load products.')

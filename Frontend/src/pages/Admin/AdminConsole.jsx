@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 import { RefreshCw, Save, ShieldCheck, Trash2 } from 'lucide-react'
 import useAuth from '../../context/useAuth'
+import { buildApiUrl } from '../../utils/api'
 
 const CATEGORY_OPTIONS = ['Quotes', 'Funny', 'Niche-Based', 'Illustration', 'Aesthetic', 'Motivational', 'Pop Culture', 'Desi', 'Couple', 'Spiritual']
 const SIZE_OPTIONS = ['S', 'M', 'L', 'XL', 'XXL']
@@ -98,7 +99,7 @@ const AdminConsole = () => {
   }), [orders, products])
 
   const fetchProducts = async () => {
-    const response = await axios.get('http://localhost:8080/api/products')
+    const response = await axios.get(buildApiUrl('/products'))
     setProducts(Array.isArray(response.data) ? response.data : [])
   }
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { AlertTriangle, CreditCard, Minus, Plus, Shield, ShoppingBag, Trash2, Truck } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
+import OrderDetailsModal from '../../Component/Order/OrderDetailsModal'
 import useAuth from '../../context/useAuth'
 import { useStore } from '../../context/StoreContext'
 
@@ -20,6 +21,7 @@ const CartPage = () => {
     storeLoading
   } = useStore()
   const [error, setError] = useState('')
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false)
 
   const totalItems = cartItems.reduce((total, item) => total + (item.quantity || 0), 0)
   const deliveryCharge = cartSubtotal > 999 ? 0 : 40
@@ -36,15 +38,14 @@ const CartPage = () => {
 
   const handleCheckout = async () => {
     setError('')
+    setShowCheckoutModal(true)
+  }
 
-    if (!isProfileComplete) {
-      navigate('/profile')
-      return
-    }
-
+  const handlePlaceOrderWithDetails = async (deliveryDetails = null) => {
     try {
-      await placeOrder()
-      navigate('/orders')
+      const createdOrder = await placeOrder(deliveryDetails)
+      setShowCheckoutModal(false)
+      navigate('/order-success', { state: { order: createdOrder } })
     } catch (checkoutError) {
       setError(checkoutError.message)
     }
@@ -77,7 +78,7 @@ const CartPage = () => {
               <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-300" />
               <div>
                 <p className="text-sm font-medium text-amber-100">Complete your profile before ordering</p>
-                <p className="text-xs text-amber-200/70">Address, phone number, city, state, and postal code are required.</p>
+                <p className="text-xs text-amber-200/70">Ya phir checkout popup me temporary delivery details bhar do.</p>
               </div>
             </div>
             <Link to="/profile" className="rounded-full bg-white px-4 py-2 text-xs font-medium text-black transition hover:bg-zinc-200">
@@ -251,6 +252,24 @@ const CartPage = () => {
           </div>
         )}
       </div>
+
+      <OrderDetailsModal
+        open={showCheckoutModal}
+        onClose={() => setShowCheckoutModal(false)}
+        onSkip={() => handlePlaceOrderWithDetails()}
+        onConfirm={handlePlaceOrderWithDetails}
+        initialDetails={{
+          contactNumber: user?.contactNumber || '',
+          addressLine1: user?.addressLine1 || '',
+          addressLine2: user?.addressLine2 || '',
+          city: user?.city || '',
+          state: user?.state || '',
+          postalCode: user?.postalCode || ''
+        }}
+        savedDetailsComplete={isProfileComplete}
+        submitting={placingOrder}
+        title="Confirm delivery details for this cart order"
+      />
     </div>
   )
 }

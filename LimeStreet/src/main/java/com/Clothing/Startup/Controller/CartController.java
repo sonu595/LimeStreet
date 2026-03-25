@@ -68,7 +68,7 @@ public class CartController {
                             ? product.getImageUrls().get(0)
                             : product.getImageUrl());
             item.setProductCategory(product.getCategory());
-            item.setPrice(product.getPrice());
+            item.setPrice(product.resolvePrice(item.getSelectedSize(), item.getSelectedColor()));
             item.setOriginalPrice(product.getOriginalPrice());
             item.setDiscountPercentage(product.getDiscountPercentage());
             item.setProductSizes(product.getSizes());
@@ -150,7 +150,7 @@ public class CartController {
                 .map(existingItem -> {
                     int currentQuantity = existingItem.getQuantity() == null ? 0 : existingItem.getQuantity();
                     existingItem.setQuantity(currentQuantity + Math.max(cart.getQuantity() == null ? 1 : cart.getQuantity(), 1));
-                    existingItem.setPrice(product.getPrice());
+                    existingItem.setPrice(product.resolvePrice(selectedSize, selectedColor));
                     existingItem.setSelectedSize(selectedSize);
                     existingItem.setSelectedColor(selectedColor);
                     return existingItem;
@@ -158,7 +158,7 @@ public class CartController {
                 .orElseGet(() -> {
                     cart.setUserId(userId);
                     cart.setQuantity(Math.max(cart.getQuantity() == null ? 1 : cart.getQuantity(), 1));
-                    cart.setPrice(product.getPrice());
+                    cart.setPrice(product.resolvePrice(selectedSize, selectedColor));
                     cart.setSelectedSize(selectedSize);
                     cart.setSelectedColor(selectedColor);
                     return cart;

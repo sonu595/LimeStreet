@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useStore } from '../../context/StoreContext'
+import { formatEstimatedDelivery, getDeliveryCountdown } from '../../utils/orderDelivery'
 
 const formatPrice = (value) => `Rs ${Number(value || 0).toLocaleString('en-IN')}`
 
@@ -43,8 +44,12 @@ const OrdersPage = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {orders.map((order) => (
-              <article key={order.id} className="rounded-[28px] border border-white/10 bg-zinc-950 p-4 sm:p-5">
+            {orders.map((order) => {
+              const countdownLabel = getDeliveryCountdown(order)
+              const expectedDeliveryLabel = formatEstimatedDelivery(order)
+
+              return (
+                <article key={order.id} className="rounded-[28px] border border-white/10 bg-zinc-950 p-4 sm:p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">Order #{order.id}</p>
@@ -53,6 +58,7 @@ const OrdersPage = () => {
                   <div className="flex flex-wrap gap-2">
                     <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white">{order.status}</span>
                     {order.deliveryDays != null && <span className="rounded-full border border-emerald-500/20 px-3 py-1 text-xs text-emerald-300">ETA {order.deliveryDays} days</span>}
+                    {countdownLabel && <span className="rounded-full border border-sky-500/20 px-3 py-1 text-xs text-sky-300">{countdownLabel}</span>}
                   </div>
                 </div>
 
@@ -74,13 +80,14 @@ const OrdersPage = () => {
                 </div>
 
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/8 pt-4">
-                  <div className="text-sm text-zinc-400">Delivery address: {order.addressLine1}, {order.city}, {order.state} {order.postalCode}</div>
+                  <div className="text-sm text-zinc-400">Delivery address: {order.addressLine1}, {order.city}, {order.state} {order.postalCode}{expectedDeliveryLabel ? ` • Aapka product ${expectedDeliveryLabel} tak aa jayega.` : ''}</div>
                   <div className="text-base font-semibold text-white">{formatPrice(order.totalAmount)}</div>
                 </div>
 
                 {order.adminNote && <p className="mt-3 rounded-2xl border border-white/8 bg-black/30 px-4 py-3 text-sm text-zinc-300">{order.adminNote}</p>}
-              </article>
-            ))}
+                </article>
+              )
+            })}
           </div>
         )}
       </div>

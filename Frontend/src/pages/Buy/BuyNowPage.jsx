@@ -2,8 +2,11 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { AlertTriangle } from 'lucide-react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import OrderDetailsModal from '../../Component/Order/OrderDetailsModal'
 import useAuth from '../../context/useAuth'
 import { useStore } from '../../context/StoreContext'
+import { getVariantPrice } from '../../utils/productPricing'
+import { buildApiUrl } from '../../utils/api'
 
 const formatPrice = (value) => `Rs ${Number(value || 0).toLocaleString('en-IN')}`
 
@@ -11,17 +14,17 @@ const BuyNowPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { user, axiosInstance } = useAuth()
-  const { fetchOrders } = useStore()
+  const { user } = useAuth()
+  const { buyNowOrder, placingOrder } = useStore()
   const [product, setProduct] = useState(null)
   const [quantity, setQuantity] = useState(1)
   const [selectedSize, setSelectedSize] = useState(searchParams.get('size') || '')
   const [selectedColor, setSelectedColor] = useState(searchParams.get('color') || '')
-  const [submitting, setSubmitting] = useState(false)
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    axios.get(`http://localhost:8080/api/products/${id}`)
+    axios.get(buildApiUrl(`/products/${id}`))
       .then((response) => {
         const nextProduct = response.data
         setProduct(nextProduct)
@@ -43,33 +46,29 @@ const BuyNowPage = () => {
     user?.postalCode
   )
 
-  const total = Number(product.price || 0) * quantity
+  const unitPrice = getVariantPrice(product, selectedSize, selectedColor)
+  const total = Number(unitPrice || 0) * quantity
   const deliveryCharge = total > 999 ? 0 : 40
   const platformFee = 10
 
   const handlePlaceOrder = async () => {
     setError('')
+    setShowCheckoutModal(true)
+  }
 
-    if (!isProfileComplete) {
-      navigate('/profile')
-      return
-    }
-
-    setSubmitting(true)
-
+  const submitBuyNowOrder = async (deliveryDetails = null) => {
     try {
-      await axiosInstance.post('/orders/buy-now', {
+      const createdOrder = await buyNowOrder({
         productId: product.id,
         quantity,
         selectedSize,
-        selectedColor
+        selectedColor,
+        deliveryDetails
       })
-      await fetchOrders()
-      navigate('/orders')
+      setShowCheckoutModal(false)
+      navigate('/order-success', { state: { order: createdOrder } })
     } catch (submitError) {
-      setError(submitError.response?.data?.message || 'Failed to place order')
-    } finally {
-      setSubmitting(false)
+      setError(submitError.message || 'Failed to place order')
     }
   }
 
@@ -82,7 +81,7 @@ const BuyNowPage = () => {
               <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-300" />
               <div>
                 <p className="text-sm font-medium text-amber-100">Complete your profile before buying</p>
-                <p className="text-xs text-amber-200/70">Address and phone details are required.</p>
+                <p className="text-xs text-amber-200/70">Aap popup me temporary delivery details bhi bhar sakte ho.</p>
               </div>
             </div>
           </div>
@@ -97,7 +96,7 @@ const BuyNowPage = () => {
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">{product.category}</p>
                 <h1 className="mt-1 text-xl font-semibold text-white">{product.name}</h1>
-                <p className="mt-3 text-sm text-zinc-300">{formatPrice(product.price)}</p>
+                <p className="mt-3 text-sm text-zinc-300">{formatPrice(unitPrice)}</p>
               </div>
             </div>
 
@@ -140,11 +139,29 @@ const BuyNowPage = () => {
               </div>
             </div>
 
-            <button type="button" onClick={handlePlaceOrder} disabled={submitting} className="mt-6 w-full rounded-2xl bg-white py-3 text-sm font-medium text-black transition hover:bg-zinc-200 disabled:opacity-70">
-              {submitting ? 'Placing order...' : 'Confirm order'}
+            <button type="button" onClick={handlePlaceOrder} disabled={placingOrder} className="mt-6 w-full rounded-2xl bg-white py-3 text-sm font-medium text-black transition hover:bg-zinc-200 disabled:opacity-70">
+              {placingOrder ? 'Placing order...' : 'Confirm order'}
             </button>
           </div>
         </div>
+
+        <OrderDetailsModal
+          open={showCheckoutModal}
+          onClose={() => setShowCheckoutModal(false)}
+          onSkip={() => submitBuyNowOrder()}
+          onConfirm={submitBuyNowOrder}
+          initialDetails={{
+            contactNumber: user?.contactNumber || '',
+            addressLine1: user?.addressLine1 || '',
+            addressLine2: user?.addressLine2 || '',
+            city: user?.city || '',
+            state: user?.state || '',
+            postalCode: user?.postalCode || ''
+          }}
+          savedDetailsComplete={isProfileComplete}
+          submitting={placingOrder}
+          title="Confirm delivery details for this order"
+        />
       </div>
     </div>
   )
