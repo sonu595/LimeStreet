@@ -66,7 +66,7 @@ const Nav = () => {
               transition={{ duration: 0.5 }}
               className="flex items-center gap-1"
             >
-              <span className="text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+              <span className="text-2xl md:text-3xl font-bold tracking-tight bg-linear-to-r from-white to-gray-400 bg-clip-text text-transparent">
                 LIME
               </span>
               <span className="text-2xl md:text-3xl font-light tracking-tight text-white">
@@ -96,7 +96,7 @@ const Nav = () => {
               >
                 {link.name}
                 <motion.span
-                  className={`absolute left-0 bottom-0 h-0.5 bg-gradient-to-r from-white to-gray-400 transition-all duration-300 ${
+                  className={`absolute left-0 bottom-0 h-0.5 bg-linear-to-r from-white to-gray-400 transition-all duration-300 ${
                     activeLink === link.path ? 'w-full' : 'w-0 group-hover:w-full'
                   }`}
                   layoutId="underline"
@@ -181,9 +181,9 @@ const Nav = () => {
         )}
       </AnimatePresence>
 
-      {/* ✅ SCROLL PROGRESS BAR - NAVBAR KE BOTTOM MEIN */}
+      {/* SCROLL PROGRESS BAR - NAVBAR KE BOTTOM MEIN */}
       <motion.div
-        className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-white via-gray-400 to-white"
+        className="absolute bottom-0 left-0 h-0.5 bg-linear-to-r from-white via-gray-400 to-white"
         style={{ 
           width: progressBarWidth,
           boxShadow: '0 0 8px rgba(255,255,255,0.5)'
@@ -192,7 +192,7 @@ const Nav = () => {
       
       {/* Optional: Glow Effect */}
       <motion.div
-        className="absolute bottom-0 left-0 h-[2px] bg-white/20 blur-sm"
+        className="absolute bottom-0 left-0 h-0.5 bg-white/20 blur-sm"
         style={{ width: progressBarWidth }}
       />
       

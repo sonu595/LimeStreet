@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 
 const Hero = () => {
   return (
-    <div className='relative flex h-[38rem] items-center justify-center overflow-hidden bg-black md:h-150 lg:h-175'>
+    <div className='relative flex h-152 items-center justify-center overflow-hidden bg-black md:h-150 lg:h-175'>
       
       {/* Premium Gradient Background */}
       <div className='absolute inset-0 bg-linear-to-b from-black via-zinc-900 to-black'></div>
@@ -19,7 +19,7 @@ const Hero = () => {
         transition={{ duration: 1 }}
         className='absolute left-1/2 top-[68%] z-0 -translate-x-1/2 -translate-y-1/2
                        text-[56px] sm:text-[88px] md:text-[150px] lg:text-[220px] xl:text-[260px]
-                       font-extrabold text-white/[0.06] whitespace-nowrap
+                       font-extrabold text-white/6 whitespace-nowrap
                        select-none pointer-events-none
                        scale-y-110 md:scale-y-120 scale-x-95 md:scale-x-90
                        tracking-tighter'
