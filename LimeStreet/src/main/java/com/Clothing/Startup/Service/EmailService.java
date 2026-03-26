@@ -1,6 +1,7 @@
 package com.Clothing.Startup.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -10,11 +11,14 @@ public class EmailService {
     
     @Autowired
     private JavaMailSender mailSender;
+
+    @Value("${MAIL_FROM:${MAIL_USERNAME:no-reply@limestreet.shop}}")
+    private String fromAddress;
     
     public void sendOtp(String toEmail, String otp) {
         SimpleMailMessage message = new SimpleMailMessage();
         
-        message.setFrom("shadow.pentest1899@gmail.com");  
+        message.setFrom(fromAddress);
         
         message.setTo(toEmail);
         message.setSubject("🔐 LimeStreet - Login OTP");

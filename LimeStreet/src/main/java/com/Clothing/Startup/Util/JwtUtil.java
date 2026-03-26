@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.Clothing.Startup.Model.User;
@@ -18,11 +19,14 @@ import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JwtUtil {
-    private final String SECRET_KEY = "MySuperSecretKeyForJWTGeneration12345678901234567890";
-    private final long EXPIRATION_TIME = 86400000; // 24 hours
+    @Value("${JWT_SECRET:change-me-in-production-please-use-a-long-random-secret-key}")
+    private String secretKey;
+
+    @Value("${JWT_EXPIRATION_MS:86400000}")
+    private long expirationTime;
 
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+        return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
     // Generate Token
@@ -37,7 +41,7 @@ public class JwtUtil {
                 .setClaims(claims)
                 .setSubject(user.getEmail())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
