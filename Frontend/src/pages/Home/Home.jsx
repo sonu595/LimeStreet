@@ -11,7 +11,7 @@ const Home = () => {
       <div className='bg-black px-4 py-4 md:px-8 md:py-12 lg:px-16'>
         <Line/>
       </div>
-      <Hero/>
+      {/* <Hero/> */}
       <Product/>
     </div>
   )
