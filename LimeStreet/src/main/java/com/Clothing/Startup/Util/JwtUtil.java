@@ -19,6 +19,11 @@ import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JwtUtil {
+    private static final String CLAIM_NAME = "name";
+    private static final String CLAIM_EMAIL = "email";
+    private static final String CLAIM_ID = "id";
+    private static final String CLAIM_ROLE = "role";
+
     @Value("${JWT_SECRET:change-me-in-production-please-use-a-long-random-secret-key}")
     private String secretKey;
 
@@ -29,16 +34,9 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
-    // Generate Token
     public String generateToken(User user) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("name", user.getName());
-        claims.put("email", user.getEmail());
-        claims.put("id", user.getId());
-        claims.put("role", user.getRole());
-
         return Jwts.builder()
-                .setClaims(claims)
+                .setClaims(buildClaims(user))
                 .setSubject(user.getEmail())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
@@ -46,10 +44,9 @@ public class JwtUtil {
                 .compact();
     }
 
-    // Validate Token
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parse(token);
+            parseJwtClaims(token);
             return true;
         } catch (Exception jwtError) {
             try {
@@ -61,22 +58,20 @@ public class JwtUtil {
         }
     }
 
-    // Extract Email from Token
     public String extractEmail(String token) {
-        return String.valueOf(extractClaim(token, "email"));
+        return String.valueOf(extractClaim(token, CLAIM_EMAIL));
     }
 
-    // Extract Name from Token
     public String extractName(String token) {
-        return String.valueOf(extractClaim(token, "name"));
+        return String.valueOf(extractClaim(token, CLAIM_NAME));
     }
 
     public String extractRole(String token) {
-        return String.valueOf(extractClaim(token, "role"));
+        return String.valueOf(extractClaim(token, CLAIM_ROLE));
     }
 
     public Long extractUserId(String token) {
-        Object id = extractClaim(token, "id");
+        Object id = extractClaim(token, CLAIM_ID);
 
         if (id == null) {
             return null;
@@ -93,15 +88,20 @@ public class JwtUtil {
         return Long.valueOf(String.valueOf(id));
     }
 
+    private Map<String, Object> buildClaims(User user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put(CLAIM_NAME, user.getName());
+        claims.put(CLAIM_EMAIL, user.getEmail());
+        claims.put(CLAIM_ID, user.getId());
+        claims.put(CLAIM_ROLE, user.getRole());
+        return claims;
+    }
+
     private Object extractClaim(String token, String key) {
         try {
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+            Claims claims = parseJwtClaims(token);
 
-            if ("email".equals(key)) {
+            if (CLAIM_EMAIL.equals(key)) {
                 return claims.getSubject();
             }
 
@@ -112,19 +112,19 @@ public class JwtUtil {
         }
     }
 
+    private Claims parseJwtClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
     private Map<String, Object> parseLegacyToken(String token) {
         try {
             byte[] decodedBytes = Base64.getDecoder().decode(token);
-            String json = new String(decodedBytes, StandardCharsets.UTF_8).trim();
+            String json = trimJsonObject(new String(decodedBytes, StandardCharsets.UTF_8).trim());
             Map<String, Object> values = new HashMap<>();
-
-            if (json.startsWith("{")) {
-                json = json.substring(1);
-            }
-
-            if (json.endsWith("}")) {
-                json = json.substring(0, json.length() - 1);
-            }
 
             if (json.isBlank()) {
                 return values;
@@ -140,28 +140,42 @@ public class JwtUtil {
                 }
 
                 String key = stripQuotes(keyValue[0].trim());
-                String rawValue = keyValue[1].trim();
-
-                if (rawValue.startsWith("\"") && rawValue.endsWith("\"")) {
-                    values.put(key, stripQuotes(rawValue));
-                    continue;
-                }
-
-                if ("null".equalsIgnoreCase(rawValue)) {
-                    values.put(key, null);
-                    continue;
-                }
-
-                try {
-                    values.put(key, Long.valueOf(rawValue));
-                } catch (NumberFormatException numberError) {
-                    values.put(key, stripQuotes(rawValue));
-                }
+                values.put(key, parseLegacyValue(keyValue[1].trim()));
             }
 
             return values;
         } catch (Exception error) {
             throw new RuntimeException("Invalid legacy token", error);
+        }
+    }
+
+    private String trimJsonObject(String json) {
+        String cleanedJson = json;
+
+        if (cleanedJson.startsWith("{")) {
+            cleanedJson = cleanedJson.substring(1);
+        }
+
+        if (cleanedJson.endsWith("}")) {
+            cleanedJson = cleanedJson.substring(0, cleanedJson.length() - 1);
+        }
+
+        return cleanedJson;
+    }
+
+    private Object parseLegacyValue(String rawValue) {
+        if (rawValue.startsWith("\"") && rawValue.endsWith("\"")) {
+            return stripQuotes(rawValue);
+        }
+
+        if ("null".equalsIgnoreCase(rawValue)) {
+            return null;
+        }
+
+        try {
+            return Long.valueOf(rawValue);
+        } catch (NumberFormatException numberError) {
+            return stripQuotes(rawValue);
         }
     }
 

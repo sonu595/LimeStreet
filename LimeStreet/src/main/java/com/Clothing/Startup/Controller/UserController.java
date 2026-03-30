@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.Clothing.Startup.Model.User;
@@ -15,16 +14,22 @@ import com.Clothing.Startup.Util.JwtUtil;
 @RequestMapping("/api/users")
 public class UserController {
 
-    @Autowired
-    private UserRepository repo;
+    private static final String BEARER_PREFIX = "Bearer ";
+    private static final String DEFAULT_COUNTRY = "India";
+    private static final String DEFAULT_ROLE = "CUSTOMER";
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final UserRepository repo;
+    private final JwtUtil jwtUtil;
+
+    public UserController(UserRepository repo, JwtUtil jwtUtil) {
+        this.repo = repo;
+        this.jwtUtil = jwtUtil;
+    }
 
     @PostMapping("/register")
     public User register(@RequestBody User user){
         if (user.getRole() == null || user.getRole().isBlank()) {
-            user.setRole("CUSTOMER");
+            user.setRole(DEFAULT_ROLE);
         }
         return repo.save(user);
     }
@@ -40,56 +45,15 @@ public class UserController {
 
     @GetMapping("/me")
     public Map<String, Object> currentUser(@RequestHeader("Authorization") String authorizationHeader) {
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            throw new RuntimeException("Authorization token required");
-        }
-
-        String token = authorizationHeader.substring(7);
-
-        if (!jwtUtil.validateToken(token)) {
-            throw new RuntimeException("Invalid token");
-        }
-
-        Long userId = jwtUtil.extractUserId(token);
-        User user = userId != null
-                ? repo.findById(userId).orElseThrow(() -> new RuntimeException("User not found"))
-                : repo.findByEmail(jwtUtil.extractEmail(token)).orElseThrow(() -> new RuntimeException("User not found"));
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("id", user.getId());
-        response.put("name", user.getName() == null ? "" : user.getName());
-        response.put("email", user.getEmail() == null ? "" : user.getEmail());
-        response.put("contactNumber", user.getContactNumber() == null ? "" : user.getContactNumber());
-        response.put("addressLine1", user.getAddressLine1() == null ? "" : user.getAddressLine1());
-        response.put("addressLine2", user.getAddressLine2() == null ? "" : user.getAddressLine2());
-        response.put("city", user.getCity() == null ? "" : user.getCity());
-        response.put("state", user.getState() == null ? "" : user.getState());
-        response.put("postalCode", user.getPostalCode() == null ? "" : user.getPostalCode());
-        response.put("country", user.getCountry() == null ? "India" : user.getCountry());
-        response.put("provider", user.getProvider() == null ? "" : user.getProvider());
-        response.put("role", user.getRole() == null ? "CUSTOMER" : user.getRole());
-        response.put("createdAt", user.getCreatedAt());
-        return response;
+        User user = findAuthenticatedUser(authorizationHeader);
+        return buildUserResponse(user);
     }
 
     @PutMapping("/me")
     public Map<String, Object> updateCurrentUser(
             @RequestHeader("Authorization") String authorizationHeader,
             @RequestBody Map<String, String> request) {
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            throw new RuntimeException("Authorization token required");
-        }
-
-        String token = authorizationHeader.substring(7);
-
-        if (!jwtUtil.validateToken(token)) {
-            throw new RuntimeException("Invalid token");
-        }
-
-        Long userId = jwtUtil.extractUserId(token);
-        User user = userId != null
-                ? repo.findById(userId).orElseThrow(() -> new RuntimeException("User not found"))
-                : repo.findByEmail(jwtUtil.extractEmail(token)).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = findAuthenticatedUser(authorizationHeader);
 
         user.setName(request.getOrDefault("name", user.getName()));
         user.setContactNumber(request.getOrDefault("contactNumber", user.getContactNumber()));
@@ -101,7 +65,7 @@ public class UserController {
         user.setCountry(request.getOrDefault("country", user.getCountry()));
 
         repo.save(user);
-        return currentUser(authorizationHeader);
+        return buildUserResponse(user);
     }
     
     @PostMapping("/login")
@@ -119,5 +83,57 @@ public class UserController {
         } else {
             throw new RuntimeException("Invalid Password");
         }
+    }
+
+    private User findAuthenticatedUser(String authorizationHeader) {
+        String token = extractToken(authorizationHeader);
+
+        if (!jwtUtil.validateToken(token)) {
+            throw new RuntimeException("Invalid token");
+        }
+
+        Long userId = jwtUtil.extractUserId(token);
+
+        if (userId != null) {
+            return repo.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+        }
+
+        return repo.findByEmail(jwtUtil.extractEmail(token))
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    private String extractToken(String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith(BEARER_PREFIX)) {
+            throw new RuntimeException("Authorization token required");
+        }
+
+        return authorizationHeader.substring(BEARER_PREFIX.length());
+    }
+
+    private Map<String, Object> buildUserResponse(User user) {
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("id", user.getId());
+        response.put("name", valueOrEmpty(user.getName()));
+        response.put("email", valueOrEmpty(user.getEmail()));
+        response.put("contactNumber", valueOrEmpty(user.getContactNumber()));
+        response.put("addressLine1", valueOrEmpty(user.getAddressLine1()));
+        response.put("addressLine2", valueOrEmpty(user.getAddressLine2()));
+        response.put("city", valueOrEmpty(user.getCity()));
+        response.put("state", valueOrEmpty(user.getState()));
+        response.put("postalCode", valueOrEmpty(user.getPostalCode()));
+        response.put("country", valueOrDefault(user.getCountry(), DEFAULT_COUNTRY));
+        response.put("provider", valueOrEmpty(user.getProvider()));
+        response.put("role", valueOrDefault(user.getRole(), DEFAULT_ROLE));
+        response.put("createdAt", user.getCreatedAt());
+        return response;
+    }
+
+    private String valueOrEmpty(String value) {
+        return value == null ? "" : value;
+    }
+
+    private String valueOrDefault(String value, String defaultValue) {
+        return value == null ? defaultValue : value;
     }
 }

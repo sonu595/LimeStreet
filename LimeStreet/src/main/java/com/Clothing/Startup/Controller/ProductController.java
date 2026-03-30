@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,14 +28,20 @@ import com.Clothing.Startup.Util.JwtUtil;
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
-    @Autowired
-    private ProductRepository repo;
+    private static final String BEARER_PREFIX = "Bearer ";
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final ProductRepository repo;
+    private final JwtUtil jwtUtil;
+    private final ProductImageStorageService productImageStorageService;
 
-    @Autowired
-    private ProductImageStorageService productImageStorageService;
+    public ProductController(
+            ProductRepository repo,
+            JwtUtil jwtUtil,
+            ProductImageStorageService productImageStorageService) {
+        this.repo = repo;
+        this.jwtUtil = jwtUtil;
+        this.productImageStorageService = productImageStorageService;
+    }
 
     @GetMapping
     public List<Product> allProduct(){
@@ -114,69 +119,14 @@ public class ProductController {
     }
 
     private Product prepareProduct(Product product) {
-        if (product.getImageUrls() == null) {
-            product.setImageUrls(new ArrayList<>());
-        }
-
-        if (product.getSizes() == null || product.getSizes().isEmpty()) {
-            if (product.getSize() != null && !product.getSize().isBlank()) {
-                product.setSizes(splitCsv(product.getSize()));
-            } else {
-                product.setSizes(new ArrayList<>());
-            }
-        }
-
-        if (product.getColors() == null) {
-            product.setColors(new ArrayList<>());
-        }
-
-        if (product.getVariantPrices() == null) {
-            product.setVariantPrices(new LinkedHashMap<>());
-        } else {
-            product.setVariantPrices(product.getVariantPrices()
-                    .entrySet()
-                    .stream()
-                    .filter(entry -> entry.getKey() != null && !entry.getKey().isBlank() && entry.getValue() != null && entry.getValue() > 0)
-                    .collect(Collectors.toMap(
-                            entry -> entry.getKey().trim().toLowerCase(),
-                            Map.Entry::getValue,
-                            (first, second) -> second,
-                            LinkedHashMap::new)));
-        }
-
-        if (product.getNewArrival() == null) {
-            product.setNewArrival(false);
-        }
-
-        if (product.getSale() == null) {
-            product.setSale(false);
-        }
-
-        if (!product.getImageUrls().isEmpty()) {
-            product.setImageUrl(product.getImageUrls().get(0));
-        }
-
-        if (!product.getSizes().isEmpty()) {
-            product.setSize(String.join(", ", product.getSizes()));
-        }
-
-        if (!product.getVariantPrices().isEmpty()) {
-            double lowestVariantPrice = product.getVariantPrices().values()
-                    .stream()
-                    .filter(value -> value != null && value > 0)
-                    .mapToDouble(Double::doubleValue)
-                    .min()
-                    .orElse(product.getPrice());
-            product.setPrice(lowestVariantPrice);
-        }
-
-        if (product.getOriginalPrice() != null && product.getOriginalPrice() > product.getPrice()) {
-            int discount = (int) Math.round(((product.getOriginalPrice() - product.getPrice()) / product.getOriginalPrice()) * 100);
-            product.setDiscountPercentage(discount);
-        } else {
-            product.setDiscountPercentage(null);
-        }
-
+        ensureCollectionsExist(product);
+        fillSizesFromLegacyField(product);
+        normalizeVariantPrices(product);
+        applyDefaultFlags(product);
+        setMainImage(product);
+        syncLegacySizeField(product);
+        updateBasePriceFromVariants(product);
+        updateDiscountPercentage(product);
         return product;
     }
 
@@ -188,11 +138,7 @@ public class ProductController {
     }
 
     private void ensureAdmin(String authorizationHeader) {
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            throw new RuntimeException("Admin authorization required.");
-        }
-
-        String token = authorizationHeader.substring(7);
+        String token = extractBearerToken(authorizationHeader);
 
         if (!jwtUtil.validateToken(token)) {
             throw new RuntimeException("Invalid admin token.");
@@ -203,5 +149,103 @@ public class ProductController {
         if (!"ADMIN".equalsIgnoreCase(role)) {
             throw new RuntimeException("Only admin users can manage products.");
         }
+    }
+
+    private void ensureCollectionsExist(Product product) {
+        if (product.getImageUrls() == null) {
+            product.setImageUrls(new ArrayList<>());
+        }
+
+        if (product.getColors() == null) {
+            product.setColors(new ArrayList<>());
+        }
+
+        if (product.getVariantPrices() == null) {
+            product.setVariantPrices(new LinkedHashMap<>());
+        }
+    }
+
+    private void fillSizesFromLegacyField(Product product) {
+        if (product.getSizes() != null && !product.getSizes().isEmpty()) {
+            return;
+        }
+
+        if (product.getSize() != null && !product.getSize().isBlank()) {
+            product.setSizes(splitCsv(product.getSize()));
+            return;
+        }
+
+        product.setSizes(new ArrayList<>());
+    }
+
+    private void normalizeVariantPrices(Product product) {
+        product.setVariantPrices(product.getVariantPrices()
+                .entrySet()
+                .stream()
+                .filter(entry -> entry.getKey() != null
+                        && !entry.getKey().isBlank()
+                        && entry.getValue() != null
+                        && entry.getValue() > 0)
+                .collect(Collectors.toMap(
+                        entry -> entry.getKey().trim().toLowerCase(),
+                        Map.Entry::getValue,
+                        (first, second) -> second,
+                        LinkedHashMap::new)));
+    }
+
+    private void applyDefaultFlags(Product product) {
+        if (product.getNewArrival() == null) {
+            product.setNewArrival(false);
+        }
+
+        if (product.getSale() == null) {
+            product.setSale(false);
+        }
+    }
+
+    private void setMainImage(Product product) {
+        if (!product.getImageUrls().isEmpty()) {
+            product.setImageUrl(product.getImageUrls().get(0));
+        }
+    }
+
+    private void syncLegacySizeField(Product product) {
+        if (!product.getSizes().isEmpty()) {
+            product.setSize(String.join(", ", product.getSizes()));
+        }
+    }
+
+    private void updateBasePriceFromVariants(Product product) {
+        if (product.getVariantPrices().isEmpty()) {
+            return;
+        }
+
+        double lowestVariantPrice = product.getVariantPrices().values()
+                .stream()
+                .filter(value -> value != null && value > 0)
+                .mapToDouble(Double::doubleValue)
+                .min()
+                .orElse(product.getPrice());
+
+        product.setPrice(lowestVariantPrice);
+    }
+
+    private void updateDiscountPercentage(Product product) {
+        if (product.getOriginalPrice() == null || product.getOriginalPrice() <= product.getPrice()) {
+            product.setDiscountPercentage(null);
+            return;
+        }
+
+        int discount = (int) Math.round(
+                ((product.getOriginalPrice() - product.getPrice()) / product.getOriginalPrice()) * 100);
+        product.setDiscountPercentage(discount);
+    }
+
+    private String extractBearerToken(String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith(BEARER_PREFIX)) {
+            throw new RuntimeException("Admin authorization required.");
+        }
+
+        return authorizationHeader.substring(BEARER_PREFIX.length());
     }
 }
