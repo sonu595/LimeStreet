@@ -8,7 +8,7 @@ const Footer = () => (
         <p className="text-xs uppercase tracking-[0.28em] text-zinc-500">LimeStreet</p>
         <h2 className="mt-3 text-2xl font-semibold text-white">Streetwear store built for fast mobile shopping.</h2>
         <p className="mt-3 max-w-md text-sm leading-6 text-zinc-400">
-          Variant pricing, smooth checkout, order tracking, aur clean mobile experience ke saath complete shopping flow.
+          A complete shopping flow with variant pricing, smooth checkout, order tracking, and a clean mobile experience.
         </p>
       </div>
 

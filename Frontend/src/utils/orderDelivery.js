@@ -6,6 +6,12 @@ const formatDateTime = new Intl.DateTimeFormat('en-IN', {
   minute: '2-digit'
 })
 
+const addDays = (dateValue, days) => {
+  const date = new Date(dateValue)
+  date.setDate(date.getDate() + days)
+  return date
+}
+
 const buildDateFromParts = (value, fallbackDateTime) => {
   if (!value) {
     return null
@@ -31,6 +37,111 @@ const buildDateFromParts = (value, fallbackDateTime) => {
 
 export const getEstimatedDeliveryDateTime = (order) =>
   buildDateFromParts(order?.estimatedDeliveryAt || order?.estimatedDeliveryDate, order?.approvedAt)
+
+export const getOrderCreatedDateTime = (order) => {
+  if (!order?.createdAt) {
+    return null
+  }
+
+  const parsedDate = new Date(order.createdAt)
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate
+}
+
+export const getOrderDisplayStatus = (order) => {
+  if (!order) {
+    return ''
+  }
+
+  if (order.status === 'CANCELLED') {
+    return 'Cancelled'
+  }
+
+  const createdAt = getOrderCreatedDateTime(order)
+  const estimatedDeliveryAt = getEstimatedDeliveryDateTime(order)
+  const now = new Date()
+
+  if (estimatedDeliveryAt && now >= estimatedDeliveryAt) {
+    return 'Delivered'
+  }
+
+  if (createdAt) {
+    const packedAt = addDays(createdAt, 1)
+    const inTransitAt = addDays(createdAt, 2)
+
+    if (now >= inTransitAt) {
+      return 'Out for delivery'
+    }
+
+    if (now >= packedAt) {
+      return 'Packed'
+    }
+  }
+
+  return 'Processing'
+}
+
+export const getOrderTrackingSteps = (order) => {
+  const createdAt = getOrderCreatedDateTime(order) || new Date()
+  const estimatedDeliveryAt = getEstimatedDeliveryDateTime(order) || addDays(createdAt, 3)
+  const now = new Date()
+  const packedAt = addDays(createdAt, 1)
+  const inTransitAt = addDays(createdAt, 2)
+  const cancelledAt = order?.cancelledAt ? new Date(order.cancelledAt) : null
+  const isCancelled = order?.status === 'CANCELLED'
+
+  const steps = [
+    {
+      key: 'confirmed',
+      title: 'Order confirmed',
+      description: 'Your order was received and added to our processing queue.',
+      time: createdAt
+    },
+    {
+      key: 'packed',
+      title: 'Packed',
+      description: 'Your items are packed and prepared for dispatch.',
+      time: packedAt
+    },
+    {
+      key: 'in-transit',
+      title: 'Out for delivery',
+      description: 'Your package is on the way to your delivery address.',
+      time: inTransitAt
+    },
+    {
+      key: 'delivered',
+      title: 'Delivered',
+      description: 'Estimated arrival based on the current 3-day delivery window.',
+      time: estimatedDeliveryAt
+    }
+  ]
+
+  return steps.map((step, index) => {
+    if (isCancelled) {
+      const reachedBeforeCancel = cancelledAt ? cancelledAt >= step.time : index === 0
+
+      return {
+        ...step,
+        state: reachedBeforeCancel ? 'completed' : 'cancelled'
+      }
+    }
+
+    if (now >= step.time) {
+      return {
+        ...step,
+        state: 'completed'
+      }
+    }
+
+    const previousStep = steps[index - 1]
+    const isCurrent = !previousStep || now >= previousStep.time
+
+    return {
+      ...step,
+      state: isCurrent ? 'current' : 'upcoming'
+    }
+  })
+}
 
 export const formatEstimatedDelivery = (order) => {
   const deliveryDate = getEstimatedDeliveryDateTime(order)

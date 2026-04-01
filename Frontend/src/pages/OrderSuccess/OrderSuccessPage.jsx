@@ -29,7 +29,10 @@ const OrderSuccessPage = () => {
         <p className="mt-6 text-xs uppercase tracking-[0.28em] text-emerald-300">Order Confirmed</p>
         <h1 className="mt-3 text-3xl font-semibold text-white sm:text-4xl">Thank you for shopping</h1>
         <p className="mt-3 text-sm text-zinc-400">
-          Aapka order place ho gaya hai. Thodi der me aapko order history page par redirect kar diya jayega.
+          Your order has been placed successfully. You will be redirected to your order history in a moment.
+        </p>
+        <p className="mt-2 text-xs text-zinc-500">
+          Pending and processing orders can be cancelled from your order history page.
         </p>
 
         {order && (

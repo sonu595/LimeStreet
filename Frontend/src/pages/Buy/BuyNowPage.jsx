@@ -82,7 +82,7 @@ const BuyNowPage = () => {
               <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-300" />
               <div>
                 <p className="text-sm font-medium text-amber-100">Complete your profile before buying</p>
-                <p className="text-xs text-amber-200/70">Aap popup me temporary delivery details bhi bhar sakte ho.</p>
+                <p className="text-xs text-amber-200/70">You can also enter temporary delivery details in the checkout modal.</p>
               </div>
             </div>
           </div>

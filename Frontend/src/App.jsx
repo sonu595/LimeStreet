@@ -12,6 +12,7 @@ import CartPage from './pages/Cart/CartPage';
 import WishListPage from './pages/WishList/WishListPage';
 import SimpleProfilePage from './pages/Profile/SimpleProfilePage';
 import OrdersPage from './pages/Orders/OrdersPage';
+import OrderTrackingPage from './pages/Orders/OrderTrackingPage';
 import ProductDetailsPage from './pages/Product/ProductDetailsPage';
 import BuyNowPage from './pages/Buy/BuyNowPage';
 import OrderSuccessPage from './pages/OrderSuccess/OrderSuccessPage';
@@ -233,6 +234,19 @@ function App() {
                   <>
                     <StoreLayout>
                       <OrdersPage />
+                    </StoreLayout>
+                  </>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/orders/:id"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <StoreLayout>
+                      <OrderTrackingPage />
                     </StoreLayout>
                   </>
                 </ProtectedRoute>

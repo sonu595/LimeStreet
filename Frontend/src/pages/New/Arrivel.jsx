@@ -29,16 +29,6 @@ const Arrivel = () => {
           <h1 className="mt-4 text-center text-5xl font-semibold text-white md:text-7xl">
             NEW ARRIVAL
           </h1>
-
-          <div className="mt-8 flex justify-end">
-            <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
-              <FolderOpen className="h-8 w-8 text-white md:h-10 md:w-10" />
-              <div className="text-right">
-                <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Folder</p>
-                <p className="mt-1 text-sm font-medium text-white md:text-base">Latest Product Drops</p>
-              </div>
-            </div>
-          </div>
         </div>
 
         <div className="py-12">

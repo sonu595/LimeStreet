@@ -79,7 +79,7 @@ const CartPage = () => {
               <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-300" />
               <div>
                 <p className="text-sm font-medium text-amber-100">Complete your profile before ordering</p>
-                <p className="text-xs text-amber-200/70">Ya phir checkout popup me temporary delivery details bhar do.</p>
+                <p className="text-xs text-amber-200/70">You can also enter temporary delivery details during checkout.</p>
               </div>
             </div>
             <Link to="/profile" className="rounded-full bg-white px-4 py-2 text-xs font-medium text-black transition hover:bg-zinc-200">

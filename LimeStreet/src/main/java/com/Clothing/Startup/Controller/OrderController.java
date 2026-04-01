@@ -1,10 +1,10 @@
 package com.Clothing.Startup.Controller;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +31,8 @@ import com.Clothing.Startup.Util.JwtUtil;
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
+
+    private static final Set<String> CUSTOMER_CANCELLABLE_STATUSES = Set.of("PROCESSING", "PACKED", "IN_TRANSIT");
 
     @Autowired
     private OrderRepository orderRepository;
@@ -83,6 +85,58 @@ public class OrderController {
         }
     }
 
+    private boolean canCustomerCancelOrder(Order order) {
+        if ("CANCELLED".equalsIgnoreCase(order.getStatus()) || "DELIVERED".equalsIgnoreCase(order.getStatus())) {
+            return false;
+        }
+
+        if (order.getEstimatedDeliveryAt() != null && !order.getEstimatedDeliveryAt().isAfter(LocalDateTime.now())) {
+            return false;
+        }
+
+        return CUSTOMER_CANCELLABLE_STATUSES.contains(order.getStatus());
+    }
+
+    private Order applyAutomaticTrackingState(Order order) {
+        if (order == null) {
+            return null;
+        }
+
+        if ("CANCELLED".equalsIgnoreCase(order.getStatus())) {
+            return order;
+        }
+
+        if (order.getApprovedAt() == null) {
+            order.setApprovedAt(order.getCreatedAt() == null ? LocalDateTime.now() : order.getCreatedAt());
+        }
+
+        if (order.getDeliveryDays() == null || order.getDeliveryDays() <= 0) {
+            order.setDeliveryDays(3);
+        }
+
+        if (order.getEstimatedDeliveryAt() == null) {
+            LocalDateTime estimatedDeliveryAt = order.getApprovedAt().plusDays(order.getDeliveryDays());
+            order.setEstimatedDeliveryAt(estimatedDeliveryAt);
+            order.setEstimatedDeliveryDate(estimatedDeliveryAt.toLocalDate());
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime packedAt = order.getApprovedAt().plusDays(1);
+        LocalDateTime inTransitAt = order.getApprovedAt().plusDays(2);
+
+        if (!order.getEstimatedDeliveryAt().isAfter(now)) {
+            order.setStatus("DELIVERED");
+        } else if (!inTransitAt.isAfter(now)) {
+            order.setStatus("IN_TRANSIT");
+        } else if (!packedAt.isAfter(now)) {
+            order.setStatus("PACKED");
+        } else {
+            order.setStatus("PROCESSING");
+        }
+
+        return order;
+    }
+
     private String readOptionalValue(Map<String, Object> request, String key, String fallback) {
         if (request == null || !request.containsKey(key)) {
             return fallback;
@@ -133,12 +187,18 @@ public class OrderController {
     private Order finalizeOrderPricing(Order order, double subtotal) {
         double deliveryCharge = subtotal > 999 ? 0 : 40;
         double platformFee = 10;
+        LocalDateTime processingStartedAt = LocalDateTime.now();
+        LocalDateTime estimatedDeliveryAt = processingStartedAt.plusDays(3);
 
         order.setSubtotal(subtotal);
         order.setDeliveryCharge(deliveryCharge);
         order.setPlatformFee(platformFee);
         order.setTotalAmount(subtotal + deliveryCharge + platformFee);
-        order.setStatus("PENDING");
+        order.setStatus("PROCESSING");
+        order.setDeliveryDays(3);
+        order.setApprovedAt(processingStartedAt);
+        order.setEstimatedDeliveryAt(estimatedDeliveryAt);
+        order.setEstimatedDeliveryDate(estimatedDeliveryAt.toLocalDate());
         return order;
     }
 
@@ -231,13 +291,66 @@ public class OrderController {
     @GetMapping("/my")
     public List<Order> getMyOrders(@RequestHeader("Authorization") String authorizationHeader) {
         User user = getCurrentUser(authorizationHeader);
-        return orderRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+        List<Order> orders = orderRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+        orders.forEach(this::applyAutomaticTrackingState);
+        return orders;
+    }
+
+    @GetMapping("/my/{orderId}")
+    public Order getMyOrderById(
+            @PathVariable Long orderId,
+            @RequestHeader("Authorization") String authorizationHeader) {
+        User user = getCurrentUser(authorizationHeader);
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (!user.getId().equals(order.getUserId())) {
+            throw new RuntimeException("You can only view your own orders.");
+        }
+
+        applyAutomaticTrackingState(order);
+        return order;
     }
 
     @GetMapping
     public List<Order> getAllOrders(@RequestHeader("Authorization") String authorizationHeader) {
         ensureAdmin(authorizationHeader);
-        return orderRepository.findAllByOrderByCreatedAtDesc();
+        List<Order> orders = orderRepository.findAllByOrderByCreatedAtDesc();
+        orders.forEach(this::applyAutomaticTrackingState);
+        return orders;
+    }
+
+    @PutMapping("/{orderId}/cancel")
+    public Order cancelOrder(
+            @PathVariable Long orderId,
+            @RequestBody(required = false) Map<String, Object> request,
+            @RequestHeader("Authorization") String authorizationHeader) {
+        User user = getCurrentUser(authorizationHeader);
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (!user.getId().equals(order.getUserId())) {
+            throw new RuntimeException("You can only cancel your own orders.");
+        }
+
+        applyAutomaticTrackingState(order);
+
+        if (!canCustomerCancelOrder(order)) {
+            throw new RuntimeException("This order can no longer be cancelled.");
+        }
+
+        String cancellationReason = readOptionalValue(request, "reason", "");
+
+        order.setStatus("CANCELLED");
+        order.setCancellationReason(cancellationReason);
+        order.setCancelledAt(LocalDateTime.now());
+        order.setEstimatedDeliveryDate(null);
+        order.setEstimatedDeliveryAt(null);
+        order.setDeliveryDays(null);
+
+        return orderRepository.save(order);
     }
 
     @PutMapping("/{orderId}/review")
@@ -262,7 +375,7 @@ public class OrderController {
         order.setDeliveryDays(deliveryDays);
         order.setAdminNote(adminNote);
 
-        if ("APPROVED".equals(status) || "PROCESSING".equals(status) || "DISPATCHED".equals(status)) {
+        if ("APPROVED".equals(status) || "PROCESSING".equals(status) || "DISPATCHED".equals(status) || "PACKED".equals(status) || "IN_TRANSIT".equals(status)) {
             LocalDateTime approvalTimestamp = order.getApprovedAt() == null ? LocalDateTime.now() : order.getApprovedAt();
 
             if (order.getApprovedAt() == null) {
@@ -279,6 +392,17 @@ public class OrderController {
         if ("REJECTED".equals(status) || "CANCELLED".equals(status)) {
             order.setEstimatedDeliveryDate(null);
             order.setEstimatedDeliveryAt(null);
+            order.setDeliveryDays(null);
+        }
+
+        if ("CANCELLED".equals(status)) {
+            if (order.getCancelledAt() == null) {
+                order.setCancelledAt(LocalDateTime.now());
+            }
+
+            if (request.get("cancellationReason") != null) {
+                order.setCancellationReason(String.valueOf(request.get("cancellationReason")).trim());
+            }
         }
 
         return orderRepository.save(order);

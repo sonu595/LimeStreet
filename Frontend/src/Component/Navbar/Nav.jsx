@@ -172,12 +172,12 @@ const Nav = () => {
       </div>
 
       {/* Mobile Theme Toggle - Separate section below the main navbar */}
-      <div className="md:hidden px-4 pb-3">
+      <div className="px-4 pb-3">
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => setIsDarkMode((current) => !current)}
-          className="w-full flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all hover:bg-white/20"
+          className="flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all hover:bg-white/20"
         >
           {isDarkMode ? <Moon size={16} /> : <Sun size={16} />}
           <span>{isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>

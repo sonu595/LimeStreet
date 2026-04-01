@@ -39,6 +39,7 @@ public class Order {
     private LocalDate estimatedDeliveryDate;
     private LocalDateTime estimatedDeliveryAt;
     private LocalDateTime approvedAt;
+    private LocalDateTime cancelledAt;
     private LocalDateTime createdAt;
 
     @Column(name = "address_line_1")
@@ -57,6 +58,9 @@ public class Order {
 
     @Column(length = 1000)
     private String adminNote;
+
+    @Column(length = 1000)
+    private String cancellationReason;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "order_items", joinColumns = @JoinColumn(name = "order_id"))

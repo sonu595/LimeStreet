@@ -52,7 +52,7 @@ const OrderDetailsModal = ({
           <div>
             <p className="text-[11px] uppercase tracking-[0.22em] text-zinc-500">Delivery</p>
             <h2 className="mt-1 text-lg font-semibold text-white sm:text-xl">{title}</h2>
-            <p className="mt-1 text-xs text-zinc-400">Sirf is order ke liye mobile ya address change kar sakte ho.</p>
+            <p className="mt-1 text-xs text-zinc-400">You can update the phone number or address for this order only.</p>
           </div>
           <button
             type="button"
@@ -65,7 +65,7 @@ const OrderDetailsModal = ({
 
         <div className="mb-4 flex items-center gap-2 rounded-2xl border border-white/8 bg-black/30 px-3 py-2 text-xs text-zinc-300">
           <Phone size={13} className="text-zinc-500" />
-          <span>Skip karoge to saved profile details use hongi.</span>
+          <span>If you skip this step, we will use your saved profile details.</span>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -116,7 +116,7 @@ const OrderDetailsModal = ({
 
         {!savedDetailsComplete && (
           <p className="mt-3 text-xs text-amber-300">
-            Saved profile incomplete hai, isliye skip disable hai.
+            Your saved profile is incomplete, so skip is disabled.
           </p>
         )}
       </div>

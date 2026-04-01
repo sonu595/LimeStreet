@@ -307,6 +307,17 @@ export const StoreProvider = ({ children }) => {
     }
   }
 
+  const cancelOrder = async (orderId, reason = '') => {
+    try {
+      const response = await axiosInstance.put(`/orders/${orderId}/cancel`, { reason })
+      await fetchOrders()
+      return response.data
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to cancel order'
+      throw new Error(message)
+    }
+  }
+
   const isInWishlist = (productId) =>
     wishlistItems.some((item) => item.productId === productId)
 
@@ -400,6 +411,7 @@ export const StoreProvider = ({ children }) => {
         clearCart,
         placeOrder,
         buyNowOrder,
+        cancelOrder,
         addToWishlist,
         removeFromWishlist,
         toggleWishlist,
