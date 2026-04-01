@@ -2,6 +2,7 @@ import React from 'react'
 import { ArrowRight, Heart, ShoppingBag, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useStore } from '../../context/StoreContext'
+import { PRODUCT_IMAGE_FALLBACK_SRC, handleProductImageError, resolveImageUrl } from '../../utils/image'
 
 const formatPrice = (value) => `Rs ${Number(value || 0).toLocaleString('en-IN')}`
 
@@ -54,9 +55,10 @@ const WishListPage = () => {
               >
                 <div className="relative h-44 overflow-hidden bg-black sm:h-52">
                   <img
-                    src={item.productImage}
+                    src={resolveImageUrl(item.productImage) || PRODUCT_IMAGE_FALLBACK_SRC}
                     alt={item.productName}
                     className="h-full w-full object-cover"
+                    onError={handleProductImageError}
                   />
                   {item.discountPercentage && (
                     <span className="absolute right-3 top-3 rounded-full bg-black/70 px-2 py-1 text-[10px] text-white">

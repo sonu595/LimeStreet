@@ -10,6 +10,15 @@ const V = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const previousScrollBehavior = document.documentElement.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = 'smooth';
+
+    return () => {
+      document.documentElement.style.scrollBehavior = previousScrollBehavior;
+    };
+  }, []);
+
   return (
     <div className='relative min-h-screen w-full overflow-hidden font-sans'>
       
@@ -90,7 +99,7 @@ const V = () => {
       </div>
 
       {/* Custom Animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes fadeInUp {
           from {
             opacity: 0;
@@ -118,13 +127,6 @@ const V = () => {
           50% {
             opacity: 0.8;
           }
-        }
-      `}</style>
-
-      {/* Optional: Add smooth scroll behavior */}
-      <style jsx global>{`
-        html {
-          scroll-behavior: smooth;
         }
       `}</style>
     </div>

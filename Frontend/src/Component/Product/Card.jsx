@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Heart, ShoppingBag } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../../context/StoreContext'
+import { PRODUCT_IMAGE_FALLBACK_SRC, handleProductImageError, resolveProductImageList } from '../../utils/image'
 import { getStartingPrice, getVariantPrice } from '../../utils/productPricing'
 
 const Card = ({ product }) => {
@@ -11,13 +12,7 @@ const Card = ({ product }) => {
   const { addToCart, toggleWishlist, isInWishlist } = useStore()
 
   const currentProduct = product || {}
-  const productImages = useMemo(() => {
-    const mergedImages = [...(currentProduct.imageUrls || []), currentProduct.imageUrl]
-      .filter(Boolean)
-      .map((image) => image.trim())
-
-    return Array.from(new Set(mergedImages)).slice(0, 4)
-  }, [currentProduct.id, currentProduct.imageUrl, currentProduct.imageUrls])
+  const productImages = useMemo(() => resolveProductImageList(currentProduct), [currentProduct])
   const sizes = currentProduct.sizes?.length
     ? currentProduct.sizes
     : currentProduct.size
@@ -110,12 +105,13 @@ const Card = ({ product }) => {
         <AnimatePresence mode="wait" initial={false}>
           <motion.img
             key={productImages[activeImageIndex] || 'fallback-image'}
-            src={productImages[activeImageIndex] || currentProduct.imageUrl}
+            src={productImages[activeImageIndex] || PRODUCT_IMAGE_FALLBACK_SRC}
             alt={product.name}
             initial={{ opacity: 0, x: slideDirection > 0 ? 28 : -28, scale: 1.02 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: slideDirection > 0 ? -28 : 28, scale: 0.98 }}
             transition={{ duration: 0.45, ease: 'easeOut' }}
+            onError={handleProductImageError}
             className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
           />
         </AnimatePresence>

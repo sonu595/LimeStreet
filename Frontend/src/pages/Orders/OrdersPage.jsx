@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useStore } from '../../context/StoreContext'
+import { PRODUCT_IMAGE_FALLBACK_SRC, handleProductImageError, resolveImageUrl } from '../../utils/image'
 import { formatEstimatedDelivery, getDeliveryCountdown } from '../../utils/orderDelivery'
 
 const formatPrice = (value) => `Rs ${Number(value || 0).toLocaleString('en-IN')}`
@@ -65,7 +66,12 @@ const OrdersPage = () => {
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   {order.items?.map((item) => (
                     <div key={`${order.id}-${item.productId}-${item.selectedSize}-${item.selectedColor}`} className="flex gap-3 rounded-2xl border border-white/8 bg-black/30 p-3">
-                      <img src={item.productImage} alt={item.productName} className="h-16 w-14 rounded-xl object-cover" />
+                      <img
+                        src={resolveImageUrl(item.productImage) || PRODUCT_IMAGE_FALLBACK_SRC}
+                        alt={item.productName}
+                        className="h-16 w-14 rounded-xl object-cover"
+                        onError={handleProductImageError}
+                      />
                       <div className="min-w-0">
                         <p className="line-clamp-2 text-sm text-white">{item.productName}</p>
                         <p className="mt-1 text-xs text-zinc-500">

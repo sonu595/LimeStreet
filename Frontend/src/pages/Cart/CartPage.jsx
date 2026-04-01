@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import OrderDetailsModal from '../../Component/Order/OrderDetailsModal'
 import useAuth from '../../context/useAuth'
 import { useStore } from '../../context/StoreContext'
+import { PRODUCT_IMAGE_FALLBACK_SRC, handleProductImageError, resolveImageUrl } from '../../utils/image'
 
 const formatPrice = (value) => `Rs ${Number(value || 0).toLocaleString('en-IN')}`
 
@@ -120,9 +121,10 @@ const CartPage = () => {
                   <div className="flex gap-3 sm:gap-4">
                     <div className="h-24 w-20 flex-shrink-0 overflow-hidden rounded-2xl bg-black sm:w-24">
                       <img
-                        src={item.productImage}
+                        src={resolveImageUrl(item.productImage) || PRODUCT_IMAGE_FALLBACK_SRC}
                         alt={item.productName}
                         className="h-full w-full object-cover"
+                        onError={handleProductImageError}
                       />
                     </div>
 

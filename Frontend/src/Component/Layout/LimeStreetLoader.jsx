@@ -155,7 +155,7 @@ const LimeStreetLoader = ({ onLoadingComplete }) => {
         )}
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes grain {
           0%, 100% { transform: translate(0, 0); }
           10% { transform: translate(-2%, -2%); }

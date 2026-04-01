@@ -5,6 +5,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import OrderDetailsModal from '../../Component/Order/OrderDetailsModal'
 import useAuth from '../../context/useAuth'
 import { useStore } from '../../context/StoreContext'
+import { PRODUCT_IMAGE_FALLBACK_SRC, handleProductImageError, resolveImageUrl } from '../../utils/image'
 import { getVariantPrice } from '../../utils/productPricing'
 import { buildApiUrl } from '../../utils/api'
 
@@ -92,7 +93,12 @@ const BuyNowPage = () => {
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
           <div className="rounded-[32px] border border-white/10 bg-zinc-950 p-5">
             <div className="flex gap-4">
-              <img src={product.imageUrls?.[0] || product.imageUrl} alt={product.name} className="h-28 w-24 rounded-2xl object-cover" />
+              <img
+                src={resolveImageUrl(product.imageUrls?.[0] || product.imageUrl) || PRODUCT_IMAGE_FALLBACK_SRC}
+                alt={product.name}
+                className="h-28 w-24 rounded-2xl object-cover"
+                onError={handleProductImageError}
+              />
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">{product.category}</p>
                 <h1 className="mt-1 text-xl font-semibold text-white">{product.name}</h1>

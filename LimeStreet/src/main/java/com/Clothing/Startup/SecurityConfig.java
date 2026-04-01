@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-    @Value("${app.cors.allowed-origin-patterns:http://localhost:*,http://10.124.7.69:*,http://127.0.0.1:*,http://192.168.*:*,http://10.*:*}")
+    @Value("${app.cors.allowed-origin-patterns:http://localhost:*,http://10.124.7.69:*,http://10.224.225.61,http://127.0.0.1:*,http://192.168.*:*,http://10.*:*}")
     private String allowedOriginPatterns;
 
     @Bean

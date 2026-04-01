@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Heart, ShoppingBag } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useStore } from '../../context/StoreContext'
+import { PRODUCT_IMAGE_FALLBACK_SRC, handleProductImageError, resolveProductImageList } from '../../utils/image'
 import { getStartingPrice, getVariantPrice } from '../../utils/productPricing'
 import { buildApiUrl } from '../../utils/api'
 
@@ -39,11 +40,7 @@ const ProductDetailsPage = () => {
       return []
     }
 
-    const mergedImages = [...(product.imageUrls || []), product.imageUrl]
-      .filter(Boolean)
-      .map((image) => image.trim())
-
-    return Array.from(new Set(mergedImages)).slice(0, 4)
+    return resolveProductImageList(product)
   }, [product])
 
   if (loading) {
@@ -57,7 +54,7 @@ const ProductDetailsPage = () => {
   const liked = isInWishlist(product.id)
   const activePrice = getVariantPrice(product, selectedSize, selectedColor)
   const startingPrice = getStartingPrice(product)
-  const currentImage = productImages[activeImageIndex] || product.imageUrl
+  const currentImage = productImages[activeImageIndex] || PRODUCT_IMAGE_FALLBACK_SRC
 
   const handleSelectImage = (nextIndex) => {
     setSlideDirection(nextIndex >= activeImageIndex ? 1 : -1)
@@ -104,7 +101,12 @@ const ProductDetailsPage = () => {
                 }`}
                 aria-label={`Show product image ${index + 1}`}
               >
-                <img src={image} alt={`${product.name} preview ${index + 1}`} className="h-full w-full object-cover" />
+                <img
+                  src={image || PRODUCT_IMAGE_FALLBACK_SRC}
+                  alt={`${product.name} preview ${index + 1}`}
+                  className="h-full w-full object-cover"
+                  onError={handleProductImageError}
+                />
                 {index === activeImageIndex && <div className="absolute inset-x-3 bottom-2 h-1 rounded-full bg-white/90" />}
               </button>
             ))}
@@ -121,6 +123,7 @@ const ProductDetailsPage = () => {
                   animate={{ opacity: 1, x: 0, scale: 1 }}
                   exit={{ opacity: 0, x: slideDirection > 0 ? -60 : 60, scale: 0.985 }}
                   transition={{ duration: 0.30, ease: 'easeOut' }}
+                  onError={handleProductImageError}
                   className="h-full w-full object-cover"
                 />
               </AnimatePresence>
