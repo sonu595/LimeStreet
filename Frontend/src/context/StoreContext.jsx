@@ -44,6 +44,25 @@ export const StoreProvider = ({ children }) => {
 
   const isServerSession = Boolean(isAuthenticated && token)
 
+  const redirectToLogin = (intent = '') => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const currentPath = `${window.location.pathname}${window.location.search}`
+    const params = new URLSearchParams()
+
+    if (currentPath && currentPath !== '/login') {
+      params.set('redirect', currentPath)
+    }
+
+    if (intent) {
+      params.set('intent', intent)
+    }
+
+    window.location.assign(`/login${params.toString() ? `?${params.toString()}` : ''}`)
+  }
+
   const resetStore = () => {
     setCartItems([])
     setWishlistItems([])
@@ -174,6 +193,11 @@ export const StoreProvider = ({ children }) => {
   })
 
   const addToCart = async (productOrId, quantity = 1, options = {}) => {
+    if (!isServerSession) {
+      redirectToLogin('cart')
+      return null
+    }
+
     const product = normalizeProductInput(productOrId)
     const payload = {
       productId: product.id,
@@ -187,29 +211,8 @@ export const StoreProvider = ({ children }) => {
       await fetchCart()
       return response.data
     } catch (error) {
-      if (isServerSession) {
-        console.log(error)
-        await fetchCart()
-        return null
-      }
-
-      const existingItems = readLocalItems('cart')
-      const existingItem = existingItems.find((item) =>
-        item.productId === product.id &&
-        item.selectedSize === payload.selectedSize &&
-        item.selectedColor === payload.selectedColor
-      )
-
-      const updatedItems = existingItem
-        ? existingItems.map((item) =>
-            item.id === existingItem.id
-              ? { ...item, quantity: (item.quantity || 0) + quantity }
-              : item
-          )
-        : [createLocalCartItem(product, quantity, payload), ...existingItems]
-
-      writeLocalItems('cart', updatedItems)
-      setCartItems(updatedItems)
+      console.log(error)
+      await fetchCart()
       return null
     }
   }
@@ -322,6 +325,11 @@ export const StoreProvider = ({ children }) => {
     wishlistItems.some((item) => item.productId === productId)
 
   const addToWishlist = async (productOrId) => {
+    if (!isServerSession) {
+      redirectToLogin('wishlist')
+      return null
+    }
+
     const product = normalizeProductInput(productOrId)
     const productId = product.id
 
@@ -330,20 +338,8 @@ export const StoreProvider = ({ children }) => {
       await fetchWishlist()
       return response.data
     } catch (error) {
-      if (isServerSession) {
-        console.log(error)
-        await fetchWishlist()
-        return null
-      }
-
-      const existingItems = readLocalItems('wishlist')
-
-      if (!existingItems.some((item) => item.productId === productId)) {
-        const updatedItems = [createLocalWishlistItem(product), ...existingItems]
-        writeLocalItems('wishlist', updatedItems)
-        setWishlistItems(updatedItems)
-      }
-
+      console.log(error)
+      await fetchWishlist()
       return null
     }
   }
@@ -366,6 +362,11 @@ export const StoreProvider = ({ children }) => {
   }
 
   const toggleWishlist = async (productOrId) => {
+    if (!isServerSession) {
+      redirectToLogin('wishlist')
+      return false
+    }
+
     const product = normalizeProductInput(productOrId)
     const productId = product.id
 
@@ -379,6 +380,11 @@ export const StoreProvider = ({ children }) => {
   }
 
   const moveWishlistToCart = async (productOrId, options = {}) => {
+    if (!isServerSession) {
+      redirectToLogin('cart')
+      return
+    }
+
     const product = normalizeProductInput(productOrId)
     const productId = product.id
     await addToCart(product, 1, options)

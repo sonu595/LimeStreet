@@ -10,7 +10,7 @@ const Nav = () => {
   const [activeLink, setActiveLink] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(true);
   const location = useLocation();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isAuthenticated } = useAuth();
   
   const { scrollYProgress } = useScroll();
   const progressBarWidth = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
@@ -123,24 +123,28 @@ const Nav = () => {
         <div className="flex items-center gap-3 md:gap-5">
           {/* Desktop Icons */}
           <div className="hidden md:flex items-center gap-3 md:gap-5">
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="relative">
-              <Link to='/cart' className="group">
-                <div className="w-9 h-9 md:w-10 md:h-10 flex items-center text-white justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all duration-300 hover:shadow-md">
-                  <ShoppingCart className="transition-transform duration-300 group-hover:scale-110" size={20} />
-                </div>
-              </Link>
-            </motion.div>
+            {isAuthenticated && (
+              <>
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="relative">
+                  <Link to='/cart' className="group">
+                    <div className="w-9 h-9 md:w-10 md:h-10 flex items-center text-white justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all duration-300 hover:shadow-md">
+                      <ShoppingCart className="transition-transform duration-300 group-hover:scale-110" size={20} />
+                    </div>
+                  </Link>
+                </motion.div>
 
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="relative">
-              <Link to='/wishlist' className="group">
-                <div className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center text-white rounded-full bg-white/10 hover:bg-white/20 transition-all duration-300 hover:shadow-md">
-                  <Heart className="transition-transform duration-300 group-hover:scale-110" size={20} />
-                </div>
-              </Link>
-            </motion.div>
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="relative">
+                  <Link to='/wishlist' className="group">
+                    <div className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center text-white rounded-full bg-white/10 hover:bg-white/20 transition-all duration-300 hover:shadow-md">
+                      <Heart className="transition-transform duration-300 group-hover:scale-110" size={20} />
+                    </div>
+                  </Link>
+                </motion.div>
+              </>
+            )}
 
             <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-              <Link to='/profile' className="group">
+              <Link to={isAuthenticated ? '/profile' : '/login'} className="group">
                 <div className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center text-white rounded-full bg-white/10 hover:bg-white/20 transition-all duration-300 hover:shadow-md">
                   <User className="transition-transform duration-300 group-hover:scale-110" size={20} />
                 </div>
@@ -153,7 +157,7 @@ const Nav = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsDarkMode((current) => !current)}
-            className="hidden md:inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all hover:bg-white/20"
+            className="desktop-theme-toggle hidden md:inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all hover:bg-white/20"
           >
             {isDarkMode ? <Moon size={16} /> : <Sun size={16} />}
             <span>{isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
@@ -172,7 +176,7 @@ const Nav = () => {
       </div>
 
       {/* Mobile Theme Toggle - Separate section below the main navbar */}
-      <div className="px-4 pb-3">
+      <div className="mobile-theme-toggle px-4 pb-3 md:hidden">
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}

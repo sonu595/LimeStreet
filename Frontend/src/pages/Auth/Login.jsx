@@ -1,12 +1,14 @@
 // Login.jsx - Dark Theme with No Green Color
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Mail, Lock, ArrowRight, ShoppingBag, Sparkles } from 'lucide-react';
 
 const Login = ({ onToggle }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { sendOtp, verifyLogin, loading: authLoading } = useAuth();
+  const redirectTo = location.state?.from || '/';
   
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
@@ -47,7 +49,7 @@ const Login = ({ onToggle }) => {
     try {
       const result = await verifyLogin(email, otp);
       if (result.success) {
-        navigate('/', { replace: true });
+        navigate(redirectTo, { replace: true });
       }
     } catch (err) {
       setError(err.message || 'Invalid OTP');

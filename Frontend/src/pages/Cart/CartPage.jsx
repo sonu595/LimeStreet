@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { AlertTriangle, CreditCard, Minus, Plus, Shield, ShoppingBag, Trash2, Truck } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
-import OrderDetailsModal from '../../Component/Order/OrderDetailsModal'
 import useAuth from '../../context/useAuth'
 import { useStore } from '../../context/StoreContext'
 import { PRODUCT_IMAGE_FALLBACK_SRC, handleProductImageError, resolveImageUrl } from '../../utils/image'
@@ -17,12 +16,9 @@ const CartPage = () => {
     updateCartQuantity,
     removeFromCart,
     clearCart,
-    placeOrder,
-    placingOrder,
     storeLoading
   } = useStore()
   const [error, setError] = useState('')
-  const [showCheckoutModal, setShowCheckoutModal] = useState(false)
 
   const totalItems = cartItems.reduce((total, item) => total + (item.quantity || 0), 0)
   const deliveryCharge = cartSubtotal > 999 ? 0 : 40
@@ -39,17 +35,7 @@ const CartPage = () => {
 
   const handleCheckout = async () => {
     setError('')
-    setShowCheckoutModal(true)
-  }
-
-  const handlePlaceOrderWithDetails = async (deliveryDetails = null) => {
-    try {
-      const createdOrder = await placeOrder(deliveryDetails)
-      setShowCheckoutModal(false)
-      navigate('/order-success', { state: { order: createdOrder } })
-    } catch (checkoutError) {
-      setError(checkoutError.message)
-    }
+    navigate('/checkout')
   }
 
   return (
@@ -229,10 +215,9 @@ const CartPage = () => {
                 <button
                   type="button"
                   onClick={handleCheckout}
-                  disabled={placingOrder}
-                  className="mt-6 w-full rounded-2xl bg-white py-3 text-sm font-semibold text-black transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="mt-6 w-full rounded-2xl bg-white py-3 text-sm font-semibold text-black transition hover:bg-zinc-200"
                 >
-                  {placingOrder ? 'Placing order...' : 'Place order'}
+                  Continue to checkout
                 </button>
 
                 <div className="mt-4 grid grid-cols-3 gap-2 text-[11px] text-zinc-500">
@@ -254,24 +239,6 @@ const CartPage = () => {
           </div>
         )}
       </div>
-
-      <OrderDetailsModal
-        open={showCheckoutModal}
-        onClose={() => setShowCheckoutModal(false)}
-        onSkip={() => handlePlaceOrderWithDetails()}
-        onConfirm={handlePlaceOrderWithDetails}
-        initialDetails={{
-          contactNumber: user?.contactNumber || '',
-          addressLine1: user?.addressLine1 || '',
-          addressLine2: user?.addressLine2 || '',
-          city: user?.city || '',
-          state: user?.state || '',
-          postalCode: user?.postalCode || ''
-        }}
-        savedDetailsComplete={isProfileComplete}
-        submitting={placingOrder}
-        title="Confirm delivery details for this cart order"
-      />
     </div>
   )
 }

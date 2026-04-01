@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import useAuth from './context/useAuth';
 import Nav from './Component/Navbar/Nav';
 import MobileBottomNav from './Component/Navbar/MobileBottomNav';
@@ -15,6 +15,8 @@ import OrdersPage from './pages/Orders/OrdersPage';
 import OrderTrackingPage from './pages/Orders/OrderTrackingPage';
 import ProductDetailsPage from './pages/Product/ProductDetailsPage';
 import BuyNowPage from './pages/Buy/BuyNowPage';
+import CheckoutAddressPage from './pages/Checkout/CheckoutAddressPage';
+import CheckoutPaymentPage from './pages/Checkout/CheckoutPaymentPage';
 import OrderSuccessPage from './pages/OrderSuccess/OrderSuccessPage';
 import Arrivel from './pages/New/Arrivel';
 import Sale from './pages/Sale/Sale';
@@ -23,6 +25,7 @@ import LimeStreetLoader from './Component/Layout/LimeStreetLoader'; // Import lo
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -44,6 +47,7 @@ const ProtectedRoute = ({ children }) => {
 
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -57,7 +61,7 @@ const PublicRoute = ({ children }) => {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={location.state?.from || '/'} replace />;
   }
 
   return children;
@@ -78,7 +82,7 @@ const AdminRoute = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: `${location.pathname}${location.search}` }} replace />;
   }
 
   if (!isAdmin) {
@@ -95,6 +99,16 @@ const StoreLayout = ({ children }) => (
     <Footer />
     <MobileBottomNav />
   </>
+)
+
+const AuthScreen = ({ children }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 18 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.28, ease: 'easeOut' }}
+  >
+    {children}
+  </motion.div>
 )
 
 function App() {
@@ -135,7 +149,9 @@ function App() {
               path="/login"
               element={
                 <PublicRoute>
-                  <Login onToggle={() => navigate('/register')} />
+                  <AuthScreen>
+                    <Login onToggle={() => navigate('/register')} />
+                  </AuthScreen>
                 </PublicRoute>
               }
             />
@@ -144,7 +160,9 @@ function App() {
               path="/register"
               element={
                 <PublicRoute>
-                  <Register onToggle={() => navigate('/login')} />
+                  <AuthScreen>
+                    <Register onToggle={() => navigate('/login')} />
+                  </AuthScreen>
                 </PublicRoute>
               }
             />
@@ -152,39 +170,33 @@ function App() {
             <Route
               path="/"
               element={
-                <ProtectedRoute>
-                  <>
-                    <StoreLayout>
-                      <Home />
-                    </StoreLayout>
-                  </>
-                </ProtectedRoute>
+                <>
+                  <StoreLayout>
+                    <Home />
+                  </StoreLayout>
+                </>
               }
             />
 
             <Route
               path="/arrivel"
               element={
-                <ProtectedRoute>
-                  <>
-                    <StoreLayout>
-                      <Arrivel />
-                    </StoreLayout>
-                  </>
-                </ProtectedRoute>
+                <>
+                  <StoreLayout>
+                    <Arrivel />
+                  </StoreLayout>
+                </>
               }
             />
 
             <Route
               path="/sale"
               element={
-                <ProtectedRoute>
-                  <>
-                    <StoreLayout>
-                      <Sale />
-                    </StoreLayout>
-                  </>
-                </ProtectedRoute>
+                <>
+                  <StoreLayout>
+                    <Sale />
+                  </StoreLayout>
+                </>
               }
             />
 
@@ -263,15 +275,39 @@ function App() {
             />
 
             <Route
-              path="/product/:id"
+              path="/checkout"
               element={
                 <ProtectedRoute>
                   <>
                     <StoreLayout>
-                      <ProductDetailsPage />
+                      <CheckoutAddressPage mode="cart" />
                     </StoreLayout>
                   </>
                 </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/checkout/payment"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <StoreLayout>
+                      <CheckoutPaymentPage mode="cart" />
+                    </StoreLayout>
+                  </>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/product/:id"
+              element={
+                <>
+                  <StoreLayout>
+                    <ProductDetailsPage />
+                  </StoreLayout>
+                </>
               }
             />
 
@@ -282,6 +318,19 @@ function App() {
                   <>
                     <StoreLayout>
                       <BuyNowPage />
+                    </StoreLayout>
+                  </>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/buy/:id/payment"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <StoreLayout>
+                      <CheckoutPaymentPage mode="buy-now" />
                     </StoreLayout>
                   </>
                 </ProtectedRoute>

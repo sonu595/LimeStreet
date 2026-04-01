@@ -1,12 +1,14 @@
 // Register.jsx - Dark Theme with No Green Color
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, Lock, ArrowRight, ShoppingBag, CheckCircle, Sparkles } from 'lucide-react';
 
 const Register = ({ onToggle }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { sendOtp, verifyAndRegister, loading: authLoading } = useAuth();
+  const redirectTo = location.state?.from || '/';
   
   const [step, setStep] = useState(1);
   const [registerData, setRegisterData] = useState({
@@ -67,7 +69,7 @@ const Register = ({ onToggle }) => {
       if (result.success) {
         setSuccess(true);
         setTimeout(() => {
-          navigate('/', { replace: true });
+          navigate(redirectTo, { replace: true });
         }, 2000);
       }
     } catch (err) {

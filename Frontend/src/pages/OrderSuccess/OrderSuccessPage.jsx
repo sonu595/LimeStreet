@@ -32,7 +32,7 @@ const OrderSuccessPage = () => {
           Your order has been placed successfully. You will be redirected to your order history in a moment.
         </p>
         <p className="mt-2 text-xs text-zinc-500">
-          Pending and processing orders can be cancelled from your order history page.
+          Active orders can be cancelled from your order history before the final delivery stage.
         </p>
 
         {order && (

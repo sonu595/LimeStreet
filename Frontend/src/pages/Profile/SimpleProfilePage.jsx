@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react'
-import { Save } from 'lucide-react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { Edit3, LogOut, Mail, MapPin, Phone, User2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import useAuth from '../../context/useAuth'
+import ProfileEditModal from './ProfileEditModal'
 
 const SimpleProfilePage = () => {
   const navigate = useNavigate()
@@ -9,6 +10,7 @@ const SimpleProfilePage = () => {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [isEditOpen, setIsEditOpen] = useState(false)
   const [form, setForm] = useState({
     name: '',
     contactNumber: '',
@@ -49,6 +51,7 @@ const SimpleProfilePage = () => {
     try {
       await updateProfile(form)
       setMessage('Profile updated successfully.')
+      setIsEditOpen(false)
     } catch (saveError) {
       setError(saveError.message)
     } finally {
@@ -70,6 +73,34 @@ const SimpleProfilePage = () => {
     form.postalCode
   )
 
+  const profileSections = useMemo(
+    () => [
+      {
+        label: 'Full name',
+        value: form.name || 'Add your full name',
+        icon: User2
+      },
+      {
+        label: 'Email address',
+        value: user?.email || 'Email not available',
+        icon: Mail
+      },
+      {
+        label: 'Phone number',
+        value: form.contactNumber || 'Add your contact number',
+        icon: Phone
+      },
+      {
+        label: 'Delivery address',
+        value: [form.addressLine1, form.addressLine2, form.city, form.state, form.postalCode, form.country]
+          .filter(Boolean)
+          .join(', ') || 'Add your delivery address',
+        icon: MapPin
+      }
+    ],
+    [form, user]
+  )
+
   return (
     <div className="min-h-screen bg-black pb-24 md:pb-8">
       <div className="border-b border-white/10 bg-gradient-to-r from-zinc-950 via-black to-zinc-950">
@@ -89,63 +120,64 @@ const SimpleProfilePage = () => {
         <div className="rounded-[32px] border border-white/10 bg-zinc-950 p-5 sm:p-6">
           <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="text-xl font-semibold text-white">Edit Profile</h2>
-              <p className="mt-1 text-sm text-zinc-400">These details will be used for order approval and delivery.</p>
+              <h2 className="text-xl font-semibold text-white">Profile details</h2>
+              <p className="mt-1 text-sm text-zinc-400">Keep your contact and delivery information up to date for a smoother checkout experience.</p>
             </div>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="rounded-2xl border border-red-500/20 px-4 py-3 text-sm text-red-300 transition hover:bg-red-500/10"
-            >
-              Logout
-            </button>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setMessage('')
+                  setError('')
+                  setIsEditOpen(true)
+                }}
+                className="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-2.5 text-sm font-medium text-black transition hover:bg-zinc-200"
+              >
+                <Edit3 size={16} />
+                Edit profile
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="inline-flex items-center gap-2 rounded-2xl border border-red-500/20 px-4 py-2.5 text-sm text-red-300 transition hover:bg-red-500/10"
+              >
+                <LogOut size={16} />
+                Logout
+              </button>
+            </div>
           </div>
 
           {message && <div className="mb-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">{message}</div>}
           {error && <div className="mb-4 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
 
-          <form onSubmit={handleSave} className="grid gap-4 md:grid-cols-2">
-            <label className="space-y-2">
-              <span className="text-xs uppercase tracking-[0.18em] text-zinc-500">Full name</span>
-              <input name="name" value={form.name} onChange={handleChange} className="w-full rounded-2xl border border-white/10 bg-black px-4 py-3 text-sm text-white outline-none focus:border-white/30" />
-            </label>
-            <label className="space-y-2">
-              <span className="text-xs uppercase tracking-[0.18em] text-zinc-500">Phone number</span>
-              <input name="contactNumber" value={form.contactNumber} onChange={handleChange} className="w-full rounded-2xl border border-white/10 bg-black px-4 py-3 text-sm text-white outline-none focus:border-white/30" />
-            </label>
-            <label className="space-y-2 md:col-span-2">
-              <span className="text-xs uppercase tracking-[0.18em] text-zinc-500">Address line 1</span>
-              <input name="addressLine1" value={form.addressLine1} onChange={handleChange} className="w-full rounded-2xl border border-white/10 bg-black px-4 py-3 text-sm text-white outline-none focus:border-white/30" />
-            </label>
-            <label className="space-y-2 md:col-span-2">
-              <span className="text-xs uppercase tracking-[0.18em] text-zinc-500">Address line 2</span>
-              <input name="addressLine2" value={form.addressLine2} onChange={handleChange} className="w-full rounded-2xl border border-white/10 bg-black px-4 py-3 text-sm text-white outline-none focus:border-white/30" />
-            </label>
-            <label className="space-y-2">
-              <span className="text-xs uppercase tracking-[0.18em] text-zinc-500">City</span>
-              <input name="city" value={form.city} onChange={handleChange} className="w-full rounded-2xl border border-white/10 bg-black px-4 py-3 text-sm text-white outline-none focus:border-white/30" />
-            </label>
-            <label className="space-y-2">
-              <span className="text-xs uppercase tracking-[0.18em] text-zinc-500">State</span>
-              <input name="state" value={form.state} onChange={handleChange} className="w-full rounded-2xl border border-white/10 bg-black px-4 py-3 text-sm text-white outline-none focus:border-white/30" />
-            </label>
-            <label className="space-y-2">
-              <span className="text-xs uppercase tracking-[0.18em] text-zinc-500">Postal code</span>
-              <input name="postalCode" value={form.postalCode} onChange={handleChange} className="w-full rounded-2xl border border-white/10 bg-black px-4 py-3 text-sm text-white outline-none focus:border-white/30" />
-            </label>
-            <label className="space-y-2">
-              <span className="text-xs uppercase tracking-[0.18em] text-zinc-500">Country</span>
-              <input name="country" value={form.country} onChange={handleChange} className="w-full rounded-2xl border border-white/10 bg-black px-4 py-3 text-sm text-white outline-none focus:border-white/30" />
-            </label>
-            <div className="md:col-span-2">
-              <button type="submit" disabled={saving} className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:bg-zinc-200 disabled:opacity-70">
-                <Save size={15} />
-                {saving ? 'Saving...' : 'Save profile'}
-              </button>
-            </div>
-          </form>
+          <div className="grid gap-4 md:grid-cols-2">
+            {profileSections.map((section) => {
+              const Icon = section.icon
+
+              return (
+                <div key={section.label} className="rounded-[28px] border border-white/10 bg-black/60 p-4 sm:p-5">
+                  <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-white">
+                    <Icon size={18} />
+                  </div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">{section.label}</p>
+                  <p className="mt-2 text-sm leading-6 text-zinc-200">{section.value}</p>
+                </div>
+              )
+            })}
+          </div>
         </div>
       </div>
+
+      <ProfileEditModal
+        open={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        form={form}
+        onChange={handleChange}
+        onSubmit={handleSave}
+        saving={saving}
+        message={message}
+        error={error}
+      />
     </div>
   )
 }
