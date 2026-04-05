@@ -186,26 +186,26 @@ html[data-theme='light'] video * {
   background-color: transparent !important;
 }
 
-.desktop-theme-toggle {
+.theme-toggle-desktop-shell {
   display: inline-flex;
 }
 
-.mobile-theme-toggle {
+.theme-toggle-mobile-shell {
   display: none;
 }
 
 @media (min-width: 768px) {
-  .mobile-theme-toggle {
+  .theme-toggle-mobile-shell {
     display: none !important;
   }
 }
 
 @media (max-width: 767.98px) {
-  .desktop-theme-toggle {
+  .theme-toggle-desktop-shell {
     display: none !important;
   }
 
-  .mobile-theme-toggle {
+  .theme-toggle-mobile-shell {
     display: block !important;
   }
 }

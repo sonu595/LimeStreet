@@ -157,7 +157,7 @@ const Nav = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsDarkMode((current) => !current)}
-            className="desktop-theme-toggle hidden md:inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all hover:bg-white/20"
+            className="theme-toggle-desktop-shell hidden md:inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all hover:bg-white/20"
           >
             {isDarkMode ? <Moon size={16} /> : <Sun size={16} />}
             <span>{isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
@@ -176,12 +176,12 @@ const Nav = () => {
       </div>
 
       {/* Mobile Theme Toggle - Separate section below the main navbar */}
-      <div className="mobile-theme-toggle px-4 pb-3 md:hidden">
+      <div className="theme-toggle-mobile-shell block px-4 pb-3 md:hidden">
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => setIsDarkMode((current) => !current)}
-          className="flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all hover:bg-white/20"
+          className="flex w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all hover:bg-white/20"
         >
           {isDarkMode ? <Moon size={16} /> : <Sun size={16} />}
           <span>{isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
