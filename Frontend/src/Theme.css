@@ -186,6 +186,14 @@ html[data-theme='light'] video * {
   background-color: transparent !important;
 }
 
+.desktop-theme-toggle {
+  display: inline-flex;
+}
+
+.mobile-theme-toggle {
+  display: none;
+}
+
 @media (min-width: 768px) {
   .mobile-theme-toggle {
     display: none !important;
@@ -199,27 +207,5 @@ html[data-theme='light'] video * {
 
   .mobile-theme-toggle {
     display: block !important;
-  }
-}
-/* Keep only one theme toggle visible at a time. */
-.sticky.top-0.z-50 > div:nth-of-type(2) {
-  display: block !important;
-}
-
-.sticky.top-0.z-50 > div:nth-of-type(3) {
-  display: none !important;
-}
-
-@media (max-width: 639px) {
-  .sticky.top-0.z-50 > div:nth-of-type(2) {
-    display: none !important;
-  }
-
-  .sticky.top-0.z-50 > div:nth-of-type(3) {
-    display: block !important;
-  }
-
-  .sticky.top-0.z-50 > div:nth-of-type(3) button span {
-    display: none !important;
   }
 }
