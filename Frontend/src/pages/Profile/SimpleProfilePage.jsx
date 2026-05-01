@@ -103,7 +103,7 @@ const SimpleProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-black pb-24 md:pb-8">
-      <div className="border-b border-white/10 bg-gradient-to-r from-zinc-950 via-black to-zinc-950">
+      <div className="border-b border-white/10 bg-linear-to-r from-zinc-950 via-black to-zinc-950">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-4 px-4 py-8 md:px-6">
           <div>
             <p className="text-xs uppercase tracking-[0.28em] text-zinc-500">Account</p>
@@ -117,7 +117,7 @@ const SimpleProfilePage = () => {
       </div>
 
       <div className="mx-auto max-w-4xl px-4 py-6 md:px-6">
-        <div className="rounded-[32px] border border-white/10 bg-zinc-950 p-5 sm:p-6">
+        <div className="rounded-4xl border border-white/10 bg-zinc-950 p-5 sm:p-6">
           <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold text-white">Profile details</h2>

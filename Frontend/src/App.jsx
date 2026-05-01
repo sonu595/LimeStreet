@@ -348,7 +348,6 @@ function App() {
                 </AdminRoute>
               }
             />
-
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
